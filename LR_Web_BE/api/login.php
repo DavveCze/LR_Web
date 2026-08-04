@@ -14,20 +14,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+require_once __DIR__ . '/../config.php';
+
 error_log('ENV dump: ' . print_r($_ENV, true));
 error_log('ADMIN_USER: ' . (getenv('ADMIN_USER') ?: 'NENALEZENO'));
-
-require_once __DIR__ . '/../config.php'; 
 
 // 3. Klasické zpracování POST požadavku
 header("Content-Type: application/json");
 
 $data = json_decode(file_get_contents("php://input"), true);
 
+error_log('DATA dump: ' . print_r($data, true));
 
 
-if ($data && isset($data['username']) && isset($data['password'])) {
-    if ($data['username'] === $_ENV['ADMIN_USER'] && $data['password'] === $_ENV['ADMIN_PASS']) {
+
+if ($data && isset($data['email']) && isset($data['password'])) {
+    if ($data['email'] === $_ENV['ADMIN_USER'] && $data['password'] === $_ENV['ADMIN_PASS']) {
         
         $token = bin2hex(random_bytes(32));
         

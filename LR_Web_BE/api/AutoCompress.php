@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 
+// Helper functions
 function respond(int $status, array $data): void
 {
 	http_response_code($status);
@@ -11,13 +12,21 @@ function respond(int $status, array $data): void
 	exit;
 }
 
-function ensureDir(string $dir): void
+// Ensure the directory exists, creating it if necessary
+function ensureDir(string $dir, bool $createIfNull = false): void
 {
-	if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
-		respond(500, ['error' => 'Failed to create output directory.']);
+	if (!is_dir($dir) && $createIfNull) {
+		if (!mkdir($dir, 0775, true) && !is_dir($dir)) {
+			respond(500, ['error' => 'Failed to create output directory.']);
+		}
+	}
+
+	if (!is_dir($dir)) {
+		respond(500, ['error' => 'Output directory does not exist.']);
 	}
 }
 
+// Sanitize a single path segment (e.g., a filename or folder name)
 function sanitizePathSegment(string $value): string
 {
 	$value = trim($value);
@@ -25,6 +34,7 @@ function sanitizePathSegment(string $value): string
 	return trim($value, '._-');
 }
 
+// Sanitize a relative path, ensuring it doesn't contain dangerous segments
 function sanitizeRelativePath(string $value): string
 {
 	$segments = preg_split('~/+~', trim($value, '/')) ?: [];
@@ -32,6 +42,7 @@ function sanitizeRelativePath(string $value): string
 	return implode('/', $segments);
 }
 
+// Create an image resource from a file based on its MIME type
 function imageFromFile(string $path, string $mime)
 {
 	return match ($mime) {
@@ -43,6 +54,7 @@ function imageFromFile(string $path, string $mime)
 	};
 }
 
+// Calculate resized dimensions while maintaining aspect ratio
 function resizedDimensions(string $sourcePath, int $targetWidth): array
 {
 	$info = getimagesize($sourcePath);
@@ -66,6 +78,7 @@ function resizedDimensions(string $sourcePath, int $targetWidth): array
 	];
 }
 
+// Convert an image to WebP format with resizing
 function toWebp(string $sourcePath, string $outputPath, int $resizeWidth, int $resizeHeight, int $sourceWidth, int $sourceHeight, string $mime): array
 {
 	$src = imageFromFile($sourcePath, $mime);
@@ -97,6 +110,7 @@ function toWebp(string $sourcePath, string $outputPath, int $resizeWidth, int $r
 	];
 }
 
+// Normalize the target directory based on POST data
 function normalizeTargetDirectory(array $postData): string
 {
 	$folder = sanitizeRelativePath((string) ($postData['folder'] ?? ''));
@@ -117,47 +131,46 @@ function normalizeTargetDirectory(array $postData): string
 	return 'home_imgs';
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-	respond(405, ['error' => 'Use POST with multipart/form-data image upload.']);
-}
+	if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+		respond(405, ['error' => 'Use POST with multipart/form-data image upload.']);
+	}
 
-if (!isset($_FILES['image'])) {
-	respond(400, ['error' => 'Missing image file field named "image".']);
-}
+	if (!isset($_FILES['image'])) {
+		respond(400, ['error' => 'Missing image file field named "image".']);
+	}
 
-$file = $_FILES['image'];
-if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-	respond(400, ['error' => 'Upload failed.']);
-}
+	$file = $_FILES['image'];
+	if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+		respond(400, ['error' => 'Upload failed.']);
+	}
 
-$tmpPath = $file['tmp_name'];
-if (!is_uploaded_file($tmpPath)) {
-	respond(400, ['error' => 'Invalid upload.']);
-}
+	$tmpPath = $file['tmp_name'];
+	if (!is_uploaded_file($tmpPath)) {
+		respond(400, ['error' => 'Invalid upload.']);
+	}
 
-$webAssetsBase = dirname(__DIR__, 2) . '/LR_Web_FE/public/assets';
-$targetDirectory = normalizeTargetDirectory($_POST);
-$uploadDir = $webAssetsBase . '/' . $targetDirectory;
-ensureDir($uploadDir);
+	$targetDirectory = normalizeTargetDirectory($_POST);
+	$uploadDir = $webAssetsBase . '/' . $targetDirectory;
+	ensureDir($uploadDir);
 
 	$baseName = (string) ($_POST['name'] ?? '');
 	if ($baseName === '') {
 		$baseName = pathinfo($file['name'] ?? 'image', PATHINFO_FILENAME);
 	}
-$baseName = sanitizePathSegment($baseName) ?: 'image';
+	$baseName = sanitizePathSegment($baseName) ?: 'image';
 
-$targets = [1920, 1280, 768, 480];
-$results = [];
+	$targets = [1920, 1280, 768];
+	$results = [];
 
 	$imageInfo = getimagesize($tmpPath);
-if ($imageInfo === false) {
-	respond(400, ['error' => 'Invalid image.']);
-}
+	if ($imageInfo === false) {
+		respond(400, ['error' => 'Invalid image.']);
+	}
 
-[$sourceWidth, $sourceHeight] = $imageInfo;
-$mime = $imageInfo['mime'] ?? '';
+	[$sourceWidth, $sourceHeight] = $imageInfo;
+	$mime = $imageInfo['mime'] ?? '';
 
-	foreach ($targets as $width) {
+	foreach ($targets as $index => $width) {
 		$dimensionInfo = resizedDimensions($tmpPath, $width);
 		if (!($dimensionInfo['ok'] ?? false)) {
 			$results[] = $dimensionInfo;
@@ -166,25 +179,46 @@ $mime = $imageInfo['mime'] ?? '';
 
 		$resizeWidth = $dimensionInfo['width'];
 		$resizeHeight = $dimensionInfo['height'];
-		$out = sprintf('%s/%s_%dx%d.webp', $uploadDir, $baseName, $resizeWidth, $resizeHeight);
+		$out = sprintf('%s/%s_%dx%d.webp', $uploadDir, $baseName, $width, $index + 1);
 		$results[] = toWebp($tmpPath, $out, $resizeWidth, $resizeHeight, $sourceWidth, $sourceHeight, $mime);
 	}
 
-$errors = array_values(array_filter($results, static fn ($r) => !($r['ok'] ?? false)));
-if ($errors !== []) {
-	respond(500, [
-		'error' => 'Compression failed.',
-		'details' => $errors,
-	]);
-}
+	$errors = array_values(array_filter($results, static fn ($r) => !($r['ok'] ?? false)));
+	if ($errors !== []) {
+		respond(500, [
+			'error' => 'Compression failed.',
+			'details' => $errors,
+		]);
+	}
 
-respond(200, [
-	'message' => 'Image compressed successfully.',
-	'targetDirectory' => $targetDirectory,
-	'files' => array_map(static fn ($r) => [
-		'width' => $r['width'],
-		'height' => $r['height'],
-		'path' => $r['path'],
-	], $results),
+	$originalOut = sprintf('%s/%s_origin.%s', $uploadDir, $baseName, pathinfo($file['name'], PATHINFO_EXTENSION));
+	rename($tmpPath, $originalOut);
+
+	moveGeneratedFilesToPredefinedLocation($results, $uploadDir);
+
+	respond(200, [
+		'message' => 'Image compressed successfully.',
+		'targetDirectory' => $targetDirectory,
+		'files' => array_map(static fn ($r) => [
+			'width' => $r['width'],
+			'height' => $r['height'],
+			'path' => $r['path'],
+		], $results),
 ]);
+
+// Move generated files to a predefined location if specified
+function moveGeneratedFilesToPredefinedLocation(array $results, string $uploadDir): void
+{
+    $predefinedLocation = $_POST['predefinedLocation'] ?? '';
+    if ($predefinedLocation !== '') {
+        $predefinedUploadDir = $webAssetsBase . '/' . $predefinedLocation;
+		// Ensure the predefined directory exists
+        ensureDir($predefinedUploadDir);
+        foreach ($results as $result) {
+            $sourcePath = $result['path'];
+            $destinationPath = sprintf('%s/%s_%dx%d.webp', $predefinedUploadDir, $result['baseName'], $result['width'], $result['index'] + 1);
+            rename($sourcePath, $destinationPath);
+        }
+    }
+}
 
