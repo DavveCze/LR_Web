@@ -8,7 +8,7 @@ type ButtonProps = {
     onClick?: () => void;
 };
 
-export const LightButton = ({ children, onClick, isBig, isCentered, isRight }: ButtonProps & { isBig?: boolean; isCentered?: boolean; isRight?: boolean }) => {
+export const LightButton = ({ children, onClick, isBig, isMedium,isCentered, isRight, isFlexible }: ButtonProps & { isBig?: boolean; isMedium?: boolean; isCentered?: boolean; isRight?: boolean; isFlexible?: boolean })  => {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
@@ -26,14 +26,19 @@ export const LightButton = ({ children, onClick, isBig, isCentered, isRight }: B
                           position: "fixed",
                           left: "50%",
                           transform: "translateX(-50%)",
-                          zIndex: 9999,
                       }
                     : {}),
                 ...(isRight
                     ? {
                           position: "fixed",
                           right: "20px",
-                          zIndex: 9999,
+                      }
+                    : {}),
+                ...(isFlexible
+                    ? {
+                          width: "100%",
+                          height: "3rem",
+                          fontSize: "1.125rem",
                       }
                     : {}),
             }}
@@ -62,15 +67,12 @@ export const DarkButton = ({ children, onClick, isBig, isMedium,isCentered, isRi
                           position: "fixed",
                           left: "50%",
                           transform: "translateX(-50%)",
-                          zIndex: 9999,
                       }
                     : {}),
                 ...(isRight
                     ? {
                           position: "fixed",
                           right: "17%",
-
-                          zIndex: 9999,
                       }
                     : {}),
                     ...(isFlexible

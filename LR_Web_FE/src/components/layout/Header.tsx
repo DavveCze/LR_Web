@@ -236,7 +236,7 @@ export const Header: FC<HeaderProps> = ({
               : "var(--nav-font-desktop)";
 
             return (
-              <li key={item.href} className="relative flex items-center">
+              <li key={item.href} className="relative flex items-center zindex-9999">
                 {index > 0 && (
                   <span className={`mx-2 ${dividerClass}`}>/</span>
                 )}
