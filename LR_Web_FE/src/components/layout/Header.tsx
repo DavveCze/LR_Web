@@ -27,13 +27,13 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     label: "LR DANCE",
-    href: "/lr-dance",
+    href: "/klub",
     children: [
-      { label: "Trenéři", href: "/lr-dance/trener" },
-      { label: "Rozvrh", href: "/lr-dance/rozvrh" },
-      { label: "Naše páry", href: "/lr-dance/pary" },
-      { label: "Fotogalerie", href: "/lr-dance/fotogalerie" },
-      { label: "Výsledky soutěží", href: "/lr-dance/vysledky-soutezi" },
+      { label: "Trenéři", href: "/klub/treneri" },
+      { label: "Rozvrh", href: "/klub/rozvrh" },
+      { label: "Naše páry", href: "/klub/pary" },
+      { label: "Fotogalerie", href: "/klub/fotogalerie" },
+      { label: "Výsledky soutěží", href: "/klub/vysledky-soutezi" },
     ],
   },
   {

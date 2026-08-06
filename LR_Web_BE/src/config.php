@@ -1,4 +1,32 @@
 <?php
+// Povol CORS z tvého frontend portu
+header("Access-Control-Allow-Origin: http://localhost:5173"); 
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+
+// Vypořádání se s OPTIONS requestem globálně
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+// Zásadní úprava pro Cookies - syntaxe pole funguje 100% od PHP 7.3
+if (session_status() === PHP_SESSION_NONE) {
+    session_start([
+        'cookie_lifetime' => 3600,
+        'cookie_path' => '/',
+        'cookie_domain' => '',
+        'cookie_secure' => false,
+        'cookie_httponly' => true,
+        'cookie_samesite' => 'Lax'
+    ]);
+}
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Jednoduchý načtač .env souboru pro čisté PHP
 function loadEnv($path) {
     if (!file_exists($path)) {

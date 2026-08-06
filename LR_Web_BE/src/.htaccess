@@ -1,0 +1,4 @@
+# src/.htaccess
+<FilesMatch "^(CryptoCore|db|config)\.php$">
+    Require all denied
+</FilesMatch>

@@ -1,70 +1,56 @@
-
 import React from 'react';
+import { DarkButton } from './ButtonPrefab';
 
 type Props = {
-	headline: string;
-	content: string;
-	link: string;
-	buttonLabel?: string;
-	cost: string;
-	isActive: boolean;
+  id: number;
+  headline: string;
+  content?: string | null;
+  link?: string | null;
+  cost?: string | null;
+  isActive: boolean;
+  buttonLabel?: string;
 };
 
 export const RegistrationComponent: React.FC<Props> = ({
-	headline,
-	content,
-	link,
-	buttonLabel = 'REGISTRACE',
+  headline,
+  content,
+  link,
+  cost,
+  buttonLabel = 'REGISTRACE',
 }) => {
-	return (
-		<div style={containerStyle}>
-			<div style={leftStyle}>
-				<h2 style={headlineStyle}>{headline}</h2>
-				<p style={contentStyle}>{content}</p>
-			</div>
-			<div style={rightStyle}>
-				<a href={link} style={buttonStyle}>
-					{buttonLabel}
-				</a>
-			</div>
-		</div>
-	);
-};
+  const button = (
+    <DarkButton isFlexible>{buttonLabel}</DarkButton>
+  );
 
-const containerStyle: React.CSSProperties = {
-	display: 'flex',
-	alignItems: 'center',
-	justifyContent: 'space-between',
-	padding: '24px 16px',
-	borderBottom: '1px solid #eee',
-};
+  return (
+    <article className="flex flex-col gap-5 border-t border-[#d7d7d7] py-10 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+      <div className="min-w-0">
+        <h3 className="text-[26px] font-medium leading-tight text-[#3d3d3d] sm:text-[28px]">
+          {headline}
+        </h3>
 
-const leftStyle: React.CSSProperties = {
-	flex: 1,
-};
+        {content && (
+          <p className="mt-2 text-[16px] leading-relaxed text-[#666666]">
+            {content}
+          </p>
+        )}
 
-const rightStyle: React.CSSProperties = {
-	marginLeft: '24px',
-};
+        <p className="mt-2 text-[16px] text-[#666666]">
+          {cost ? `Cena: ${cost}` : 'Cena: viz přihláška'}
+        </p>
+      </div>
 
-const headlineStyle: React.CSSProperties = {
-	margin: 0,
-	fontSize: '20px',
-	color: '#333',
+      {link ? (
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {button}
+        </a>
+      ) : (
+        <span className="mx-full">{button}</span>
+      )}
+    </article>
+  );
 };
-
-const contentStyle: React.CSSProperties = {
-	margin: '6px 0 0 0',
-	color: '#777',
-};
-
-const buttonStyle: React.CSSProperties = {
-	display: 'inline-block',
-	background: '#333',
-	color: '#fff',
-	padding: '14px 28px',
-	textDecoration: 'none',
-	letterSpacing: '0.5px',
-};
-
-export default RegistrationComponent;
