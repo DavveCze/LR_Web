@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
+import { apiUrl } from '../../api/client';
 import {
   CUSTOM_FOLDER_VALUE,
   IMAGE_FOLDER_OPTIONS,
@@ -92,7 +93,7 @@ export const ImageUploadPanel: React.FC = () => {
     formData.append('name', name.trim());
 
     try {
-      const response = await fetch('http://localhost:8080/api/upload-image.php', {
+      const response = await fetch(apiUrl('upload-image.php'), {
         method: 'POST',
         credentials: 'include',
         body: formData,

@@ -1,0 +1,61 @@
+# ==============================================================================
+# LR-Dance - Backend .gitignore (PHP 8, Docker, PostgreSQL, CMS data)
+# ==============================================================================
+
+# 1. Závislosti Composeru
+vendor/
+composer.phar
+
+# 2. Lokální prostředí a přihlašovací údaje
+.env
+.env.local
+.env.*.local
+*.env
+*.env.local
+!.env.example
+!.env.template
+
+# 3. Logy, cache a runtime zámky
+logs/
+*.log
+*.tmp
+*.temp
+*.cache
+
+# Zámky procesů (ponech composer.lock sledovaný)
+*.lock
+!composer.lock
+*.json.lock
+
+# CMS data: dynamické revize a runtime zámky
+src/data/revisions/
+src/data/*.lock
+src/data/*.json.lock
+
+# 4. Lokální databázové zálohy a dumpy
+*.dump
+*.sql.gz
+*.sql.tar
+*.sqlite
+*.sqlite3
+*.db
+
+# SQL schémata, init a migrace musí zůstat sledované
+!db/init/*.sql
+!db/migrations/*.sql
+
+# 5. Editor a OS artefakty
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.sw?
+*.bak
+*.orig

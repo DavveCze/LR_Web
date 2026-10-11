@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { apiUrl } from "../api/client";
 import { TrainerProps, TrainerProfileSmall, TrainerProfileLarge } from "../components/ui/TrainerProfiles";
+import { PartnersSection } from "../components/ui/PartnersSection";
 
 export const ClubTrainersPage: React.FC = () => {
   const [trainers, setTrainers] = useState<TrainerProps[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/trainers.php')
+    fetch(apiUrl('trainers.php'))
       .then(res => res.json())
       .then(data => {
         if (data.status === 'success') {
@@ -49,6 +51,7 @@ export const ClubTrainersPage: React.FC = () => {
           </section>
       )}
 
+      <PartnersSection className="mt-16" />
     </main>
   );
 };

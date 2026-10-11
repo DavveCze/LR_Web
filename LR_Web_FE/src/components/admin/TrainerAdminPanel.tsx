@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { TrainerProps } from '../ui/TrainerProfiles';
+import { apiUrl } from '../../api/client';
 
 export const TrainerAdminPanel: React.FC = () => {
     const [trainers, setTrainers] = useState<TrainerProps[]>([]);
@@ -9,7 +10,7 @@ export const TrainerAdminPanel: React.FC = () => {
     });
 
     const fetchTrainers = () => {
-        fetch('http://localhost:8080/api/trainers.php')
+        fetch(apiUrl('trainers.php'))
             .then(res => res.json())
             .then(data => { if (data.status === 'success') setTrainers(data.data); });
     };
@@ -20,7 +21,7 @@ export const TrainerAdminPanel: React.FC = () => {
         e.preventDefault();
         const method = currentItem.id ? 'PUT' : 'POST';
         
-        await fetch('http://localhost:8080/api/trainers.php', {
+        await fetch(apiUrl('trainers.php'), {
             method, credentials: 'include', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(currentItem)
         });
@@ -31,7 +32,7 @@ export const TrainerAdminPanel: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         if (!confirm('Smazat trenéra?')) return;
-        await fetch('http://localhost:8080/api/trainers.php', {
+        await fetch(apiUrl('trainers.php'), {
             method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id })
         });

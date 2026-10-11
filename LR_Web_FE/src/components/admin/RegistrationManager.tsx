@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { RegistrationItem } from '../ui/RegistrationCategory';
+import { apiUrl } from '../../api/client';
 
 type AdminRegistrationItem = RegistrationItem & {
     category: string;
@@ -16,7 +17,7 @@ export const RegistrationManager: React.FC = () => {
     });
 
     const fetchRegistrations = () => {
-        fetch('http://localhost:8080/api/prihlasky.php')
+        fetch(apiUrl('prihlasky.php'))
             .then((res) => res.json())
             .then((data) => {
                 if (data.status === 'success') {
@@ -42,7 +43,7 @@ export const RegistrationManager: React.FC = () => {
 
         const method = currentItem.id ? 'PUT' : 'POST';
 
-        const res = await fetch('http://localhost:8080/api/prihlasky.php', {
+        const res = await fetch(apiUrl('prihlasky.php'), {
             method,
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
@@ -61,7 +62,7 @@ export const RegistrationManager: React.FC = () => {
     const handleDelete = async (id: number) => {
         if (!confirm('Opravdu smazat tuto přihlášku?')) return;
 
-        const res = await fetch('http://localhost:8080/api/prihlasky.php', {
+        const res = await fetch(apiUrl('prihlasky.php'), {
             method: 'DELETE',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },

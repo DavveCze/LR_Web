@@ -115,15 +115,16 @@ export const HelperImage: FC<{
   loading?: "lazy" | "eager";
 }> = ({ baseName, pageFolder, alt, className, width, height, loading }) => {
   const src = useRefreshingAsset(baseName, pageFolder);
-  const [isDecoded, setIsDecoded] = useState(false);
+  const [decodedSrc, setDecodedSrc] = useState<string | null>(null);
 
   useEffect(() => {
     if (!src) return;
-    setIsDecoded(false);
     const img = new Image();
     img.src = src;
-    img.onload = () => setIsDecoded(true);
+    img.onload = () => setDecodedSrc(src);
   }, [src]);
+
+  const isDecoded = decodedSrc === src;
 
   return (
     <div className={`relative overflow-hidden bg-neutral-100 ${className ?? ""}`}>

@@ -1,24 +1,56 @@
-# Logs
-logs
+# ==============================================================================
+# LR-Dance - Frontend .gitignore (React 19, Vite, TypeScript, Tailwind)
+# ==============================================================================
+
+# 1. Závislosti
+node_modules/
+
+# 2. Produkční buildy a výstupy kompilace
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# 3. Lokální prostředí a tajné proměnné
+.env
+.env.local
+.env.*.local
+*.env.local
+!.env.example
+!.env.template
+
+# 4. Logy a mezipaměť (Cache)
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.eslintcache
+.vite/
+.cache/
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# 5. Editor a OS artefakty
 .DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.bak
+*.orig
+public/assets/imgs/*/*_1.webp
+public/assets/imgs/*/*_2.webp
+public/assets/imgs/*/*_3.webp
+public/assets/imgs/*/*_origin.webp

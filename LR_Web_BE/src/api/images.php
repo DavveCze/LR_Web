@@ -43,26 +43,64 @@ if ($method === 'GET') {
         // nebo _origin.*
         $files = scandir($dir);
         $foundBases = [];
+        $standaloneFiles = [];
 
         foreach ($files as $file) {
-            if ($file === '.' || $file === '..') continue;
+            if ($file === '.' || $file === '..' || is_dir($dir . '/' . $file)) continue;
 
             // Regex zachytí baseName před _1, _2, _3 nebo _origin
-            if (preg_match('/^(.+)_(origin|1|2|3)\.(webp|jpg|png|gif)$/i', $file, $matches)) {
+            if (preg_match('/^(.+)_(origin|1|2|3)\.(webp|jpg|jpeg|png|gif)$/i', $file, $matches)) {
                 $baseName = $matches[1];
                 $foundBases[$baseName] = true;
+            } elseif (preg_match('/^(.+)\.(webp|jpg|jpeg|png|gif)$/i', $file, $matches)) {
+                $rawBase = $matches[1];
+                if (!str_ends_with($rawBase, '_origin') && !preg_match('/_[123]$/', $rawBase)) {
+                    if (!isset($standaloneFiles[$rawBase])) {
+                        $standaloneFiles[$rawBase] = $file;
+                    }
+                }
             }
         }
 
         foreach (array_keys($foundBases) as $baseName) {
+            $preview = "/assets/imgs/{$folderName}/{$baseName}_1.webp";
+            if (!file_exists("{$dir}/{$baseName}_1.webp")) {
+                if (file_exists("{$dir}/{$baseName}_2.webp")) {
+                    $preview = "/assets/imgs/{$folderName}/{$baseName}_2.webp";
+                } elseif (file_exists("{$dir}/{$baseName}_3.webp")) {
+                    $preview = "/assets/imgs/{$folderName}/{$baseName}_3.webp";
+                } else {
+                    $originMatches = glob("{$dir}/{$baseName}_origin.*");
+                    if (!empty($originMatches)) {
+                        $preview = "/assets/imgs/{$folderName}/" . basename($originMatches[0]);
+                    }
+                }
+            }
+
             $assets[] = [
                 'folder' => $folderName,
                 'baseName' => $baseName,
-                // Náhled url - zkusíme _1 (nejmenší) pro rychlé načítání v adminu
-                'previewUrl' => "/assets/imgs/{$folderName}/{$baseName}_1.webp"
+                'previewUrl' => $preview,
             ];
         }
+
+        // Doplníme i samostatné obrázky bez variant _1/_2/_3, pokud nemají baseName shodu
+        foreach ($standaloneFiles as $rawBase => $standaloneFile) {
+            if (!isset($foundBases[$rawBase])) {
+                $assets[] = [
+                    'folder' => $folderName,
+                    'baseName' => $rawBase,
+                    'previewUrl' => "/assets/imgs/{$folderName}/{$standaloneFile}",
+                ];
+            }
+        }
     }
+
+    // Seřadíme podle složky a názvu pro přehlednost
+    usort($assets, static function (array $a, array $b): int {
+        $folderCmp = strcmp($a['folder'], $b['folder']);
+        return $folderCmp !== 0 ? $folderCmp : strcmp($a['baseName'], $b['baseName']);
+    });
 
     respond(200, ['status' => 'success', 'data' => $assets]);
 }

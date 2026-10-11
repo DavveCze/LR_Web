@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import type { TrainingBlock } from "../schedule/TrainingSchedule";
+import { apiUrl } from "../../api/client";
 
-const API_URL = "http://localhost:8080/api/training-schedule.php";
+const API_URL = apiUrl('training-schedule.php');
 
 type FormState = {
   id?: number;

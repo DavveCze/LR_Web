@@ -11,6 +11,26 @@ export const IMAGE_FOLDER_OPTIONS: ImageFolderOption[] = [
     description: 'Hero sekce, aktuality a obrázky na úvodní stránce.',
   },
   {
+    value: 'partners',
+    label: 'Partneři',
+    description: 'Loga partnerů, sponzorů a dotačních programů.',
+  },
+  {
+    value: 'carmen',
+    label: 'Carmen',
+    description: 'Fotky a prezentace TŠ Carmen, tábory a akce.',
+  },
+  {
+    value: 'treneri',
+    label: 'Trenéři',
+    description: 'Profilové fotografie trenérů.',
+  },
+  {
+    value: 'downloaded',
+    label: 'Knihovna / Downloaded',
+    description: 'Archivní a stažené plakáty, diplomy a soutěžní snímky.',
+  },
+  {
     value: 'about_imgs',
     label: 'O nás',
     description: 'Fotky pro podstránku O nás.',

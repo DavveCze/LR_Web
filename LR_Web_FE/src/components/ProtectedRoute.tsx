@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { apiUrl } from '../api/client';
 
 export const ProtectedRoute: React.FC = () => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
     useEffect(() => {
         // Zkontroluje session na backendu
-        fetch('http://localhost:8080/api/check-auth.php', {
+        fetch(apiUrl('check-auth.php'), {
             credentials: 'include',
         })
             .then(res => res.json())

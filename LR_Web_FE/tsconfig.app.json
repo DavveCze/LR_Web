@@ -13,6 +13,5 @@
 		"noEmit": true,
 		"jsx": "react-jsx"
 	},
-	"include": ["src"],
-	"exclude": ["src/pages/AboutPage.tsx"]
+	"include": ["src"]
 }

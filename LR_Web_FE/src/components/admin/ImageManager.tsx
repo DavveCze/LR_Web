@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { apiUrl } from '../../api/client';
 
 type Asset = {
   folder: string;
@@ -13,7 +14,7 @@ export const ImageManager: React.FC = () => {
 
   const fetchAssets = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/images.php');
+      const res = await fetch(apiUrl('images.php'));
       const data = await res.json();
       if (data.status === 'success') setAssets(data.data);
     } catch (err) {
@@ -30,7 +31,7 @@ export const ImageManager: React.FC = () => {
   const handleDelete = async (folder: string, baseName: string) => {
     if (!confirm(`Opravdu smazat všechny varianty obrázku "${baseName}" ve složce "${folder}"?`)) return;
 
-    await fetch('http://localhost:8080/api/images.php', {
+    await fetch(apiUrl('images.php'), {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ folder, baseName }),
@@ -43,7 +44,7 @@ export const ImageManager: React.FC = () => {
     const newBaseName = prompt('Zadejte nový název (bez diakritiky a mezer):', oldBaseName);
     if (!newBaseName || newBaseName === oldBaseName) return;
 
-    await fetch('http://localhost:8080/api/images.php', {
+    await fetch(apiUrl('images.php'), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ folder, oldBaseName, newBaseName }),
@@ -78,10 +79,24 @@ export const ImageManager: React.FC = () => {
         {filteredAssets.map(asset => (
           <div key={`${asset.folder}-${asset.baseName}`} className="border rounded p-2 flex flex-col items-center text-center">
             <img 
-              src={`http://localhost:5173${asset.previewUrl}`} // Během dev modu přesměrováno na Vite port
+              src={asset.previewUrl}
               alt={asset.baseName} 
-              className="h-24 w-full object-cover rounded bg-gray-100 mb-2"
-              onError={(e) => (e.currentTarget.style.display = 'none')}
+              className="h-24 w-full object-cover rounded bg-gray-100 mb-2 cursor-pointer hover:opacity-90 transition-opacity"
+              title={`Kliknutím zkopírujete cestu k obrázku (${asset.previewUrl})`}
+              onClick={() => {
+                if (navigator?.clipboard?.writeText) {
+                  navigator.clipboard.writeText(asset.previewUrl);
+                }
+              }}
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.dataset.triedFallback && !target.src.includes(':5173')) {
+                  target.dataset.triedFallback = 'true';
+                  target.src = `http://localhost:5173${asset.previewUrl}`;
+                } else {
+                  target.style.display = 'none';
+                }
+              }}
             />
             <span className="text-xs text-gray-500 w-full truncate">{asset.folder}</span>
             <span className="font-medium text-sm w-full truncate mb-2">{asset.baseName}</span>

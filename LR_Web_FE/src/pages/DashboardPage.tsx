@@ -1,29 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiUrl } from '../api/client';
 import { ImageUploadPanel } from '../components/admin/ImageUploadPanel';
 import { ImageManager } from '../components/admin/ImageManager';
 import { TrainerAdminPanel } from '../components/admin/TrainerAdminPanel';
 import { RegistrationManager } from '../components/admin/RegistrationManager';
-import { TrainingSchedule } from '../components/schedule/TrainingSchedule';
 import { TrainingScheduleAdmin } from '../components/admin/TrainingScheduleAdmin';
 import { DanceAdminPanel } from '../components/admin/DanceAdminPanel';
-
-// Typy vycházející z databáze a frontend struktury
-interface RegistrationItem {
-    id: number;
-    category: string;
-    headline: string;
-    content: string;
-    link: string;
-    cost: string;
-    isActive: boolean;
-}
+import { CarmenAdminPanel } from '../components/admin/CarmenAdminPanel';
+import { PartnersSection } from '../components/ui/PartnersSection';
 
 export const DashboardPage: React.FC = () => {  
     const navigate = useNavigate();
 
     const handleLogout = async () => {
-        await fetch('http://localhost:8080/api/logout.php', { credentials: 'include' });
+        await fetch(apiUrl('logout.php'), { credentials: 'include' });
         navigate('/login');
     };
 
@@ -62,6 +53,18 @@ export const DashboardPage: React.FC = () => {
                 <div className="mb-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">Tréninkový rozvrh</h2>
                     <DanceAdminPanel />
+                </div>
+
+                <div className="mb-8">
+                    <CarmenAdminPanel />
+                </div>
+
+                <div className="mb-8 bg-white p-6 rounded-lg shadow-sm">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Správa partnerů a dotačních popisků</h2>
+                    <p className="text-sm text-gray-600 mb-6">
+                        Zde můžete upravovat loga partnerů, jejich pozici i speciální textové deklarace dotací.
+                    </p>
+                    <PartnersSection editable={true} />
                 </div>
             </div>
         </div>

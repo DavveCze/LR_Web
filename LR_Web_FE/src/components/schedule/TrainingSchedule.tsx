@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { apiUrl } from "../../api/client";
 
-const API_URL = "http://localhost:8080/api/training-schedule.php";
+const API_URL = apiUrl('training-schedule.php');
 
 const DAYS = [
   { key: "monday", label: "Pondělí" },
@@ -61,7 +62,7 @@ export function TrainingSchedule() {
   const [blocks, setBlocks] = useState<TrainingBlock[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const timeSlots = useMemo(buildTimeSlots, []);
+  const timeSlots = useMemo(() => buildTimeSlots(), []);
 
   useEffect(() => {
     fetch(API_URL)

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { DarkButton } from "../components/ui/ButtonPrefab";
+import { apiUrl } from "../api/client";
 
-const API_URL = "http://localhost:8080/api/dancers.php";
+const API_URL = apiUrl('dancers.php');
 
 type Person = {
   id: number;
@@ -67,6 +68,7 @@ function Categories({
 }
 
 export function ClubPairsPage() {
+  const navigate = useNavigate();
   const [pairs, setPairs] = useState<DancePair[]>([]);
   const [singles, setSingles] = useState<SingleDancer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,21 +93,18 @@ export function ClubPairsPage() {
   return (
     <main className="py-40 text-neutral-950">
       <div className="mx-auto max-w-7xl px-6">
-        
-
         <div className="mb-12 flex flex-wrap items-center justify-between gap-4">
-          <DarkButton isMedium isCentered
+          <h1 className="text-3xl font-bold uppercase tracking-wide text-neutral-800">
+            Naše páry
+          </h1>
+          <DarkButton
             onClick={() => {
-              window.location.href = "/klub/vysledky-soutezi";
+              navigate("/klub/vysledky-soutezi");
             }}
           >
             Výsledky soutěží
           </DarkButton>
         </div>
-
-        <h1 className="mb-12 text-3xl font-bold uppercase tracking-wide text-neutral-800 my-10">
-            Naše páry
-          </h1>
 
         {loading ? (
           <div className="space-y-px">

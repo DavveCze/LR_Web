@@ -1,0 +1,135 @@
+{
+    "test": {
+        "updated": true
+    },
+    "_updated_at": "2026-10-11T17:09:40+00:00",
+    "partners": {
+        "title": "PARTNEŘI",
+        "mainLogos": [
+            {
+                "id": "csts",
+                "name": "Český svaz tanečního sportu",
+                "logo": "/assets/imgs/partners/csts_logo_1.webp",
+                "url": "https://csts.cz",
+                "position": "left"
+            },
+            {
+                "id": "ostrava",
+                "name": "Statutární město Ostrava",
+                "logo": "/assets/imgs/partners/ostrava_logo_1.webp",
+                "url": "https://ostrava.cz",
+                "position": "right-top"
+            },
+            {
+                "id": "nsa",
+                "name": "Národní sportovní agentura",
+                "logo": "/assets/imgs/partners/nsa_logo_1.webp",
+                "url": "https://nsa.gov.cz",
+                "position": "right-bottom"
+            }
+        ],
+        "notices": [
+            {
+                "id": "nsa-dotace",
+                "logo": "/assets/imgs/partners/nsa_logo_1.webp",
+                "title": "Podpora Národní sportovní agentury",
+                "paragraphs": [
+                    "Spolek LR Cosmetic dance team, z. s. obdržel v roce [2026] dotaci od Národní sportovní agentury ve výši 248 400 Kč.",
+                    "Dotace je využívána na podporu sportovní činnosti a rozvoj tanečního sportu."
+                ],
+                "thanksText": "Za poskytnutou podporu děkujeme."
+            }
+        ]
+    },
+    "carmen": {
+        "overview": {
+            "title": "TŠ CARMEN",
+            "bullets": [
+                "Taneční školu Carmen založila Lucie Skopalíková v roce 2000. Zaměřujeme se na práci s dětmi v mateřských a základních školách.",
+                "Nabízíme bohaté a kvalitní zkušenosti v oblasti výuky tance, rozvoj pohybu a koordinace dítěte, spoustu zážitků, legrace a her, mnohaletou praxi s dětmi. Výuka probíhá přímo ve školce či škole, takže nemusíte nikam dojíždět. Závěr kurzu je ukončen velkolepou taneční akademií v kulturním domě Akord. Možnost pokračování ve sportovním klubu LR Dance team Ostrava.",
+                "Během roku pořádáme další aktivity pro děti jako jsou např. víkendové pobyty, o prázdninách - spací tábor a také příměstské tábory."
+            ],
+            "facebookUrl": "https://www.facebook.com/groups/572718036195543",
+            "galleryUrl": "/carmen/fotogalerie",
+            "slideshow": [
+                {
+                    "src": "/assets/imgs/carmen/carmen_tanec_1.webp",
+                    "alt": "Taneční vystoupení Carmen"
+                },
+                {
+                    "src": "/assets/imgs/carmen/carmen_tanec1_1.webp",
+                    "alt": "Dětský tanec Carmen"
+                },
+                {
+                    "src": "/assets/imgs/carmen/carmen_tanec3_1.webp",
+                    "alt": "Taneční lekce Carmen"
+                },
+                {
+                    "src": "/assets/imgs/carmen/carmen_skupina_1.webp",
+                    "alt": "Společné foto dětí Carmen"
+                }
+            ]
+        },
+        "tabor": {
+            "title": "SPACÍ TÁBOR",
+            "paragraphs": [
+                "Letní spací tábor probíhá v RK Budoucnost v krásném prostředí Beskyd (Nová Ves – Frýdlant nad Ostravicí).",
+                "Děti čeká celotáborová hra, tréninky v tanečním sále, in-line dráha, diskotéky a koupání."
+            ],
+            "location": "RK Budoucnost, Frýdlant n. O.",
+            "age": "od 6 do 17 let",
+            "food": "Plná penze 5x denně + pitný režim",
+            "poster": "/assets/imgs/downloaded/plakat_carmen_spaci_tabor_1.webp",
+            "registrationUrl": "https://is.pohodlne.info/udalost/detail/7276514b04c88c5d5b6d4f6eed82ab20"
+        },
+        "primestsky": {
+            "title": "PŘÍMĚSTSKÝ TÁBOR",
+            "paragraphs": [
+                "Příměstské tábory pořádáme v Markvartovicích nedaleko Ostravy, kde již kousíček za městem jsme v úplně jiném světě plném přírody.",
+                "Děti přicházejí ráno a odpoledne odcházejí domů. Program plný tance, her v přírodě a kamarádů."
+            ],
+            "location": "Markvartovice u Ostravy",
+            "terms": "Červenec & Srpen",
+            "food": "Oběd, svačina, pitný režim, program",
+            "julyUrl": "https://is.pohodlne.info/udalost/detail/963ee4c7ec8f45e975dc32e22460b0e5",
+            "augustUrl": "https://is.pohodlne.info/udalost/detail/a7f620f6e30b373bdbc66a86b8c9b407",
+            "poster": "/assets/imgs/downloaded/plakat_carmen_primestsky_1.webp"
+        },
+        "vikend": {
+            "title": "TANEČNÍ VÍKEND",
+            "paragraphs": [
+                "Vážení rodiče a milé děti, naše taneční škola pořádá každým rokem různé taneční víkendy a také letní a příměstské tábory. Pro děti máme kromě tanečních tréninků připraveny různé hry, k dispozici máme taneční sál, večer nesmí chybět diskotéka a také si odpočineme ve wellness hotelu Budoucnost.",
+                "Chceme vás tímto pozvat na taneční víkend do Frýdlantu nad Ostravicí na hotel Budoucnost, kde máme zázemí v příjemném prostředí Beskyd. Některé děti možná ještě nikde samotné nebyly, proto volíme na začátek pouze víkend, ať nemají děti strach, že budou dlouho bez rodičů, a dvě noci určitě zvládnou. Pro děti se snažíme udělat maximum, aby byly spokojené a víkend si pořádně užily!",
+                "Soustředění a tábory pořádáme již 20 let a mezi nejmladší účastníky patří i čtyřleté děti, takže nemusíte mít strach, o vaše děti bude dobře postaráno. Vaše děti si užijí skvělou atmosféru a vy se můžete v klidu odpočinout."
+            ],
+            "term": "12. 12. – 14. 12. 2026",
+            "location": "Hotel Budoucnost, Frýdlant nad Ostravicí",
+            "price": "2 600 Kč (cena zahrnuje ubytování, stravu, pitný režim, tréninky, taneční sál, wellness a dopravu)",
+            "poster": "/assets/imgs/downloaded/plakat_carmen_vikend_1.webp",
+            "registrationUrl": "https://is.pohodlne.info/udalost/detail/f1bea44fb1dd886eeeb7945055654da6"
+        },
+        "fotogalerie": {
+            "title": "FOTOGALERIE CARMEN",
+            "albums": [
+                {
+                    "id": "akademie-2023",
+                    "title": "Akademie 2023",
+                    "image": "/assets/imgs/downloaded/carmen_akademie_2023_1.webp",
+                    "url": "https://www.rajce.idnes.cz/lr-dance/album/ts-carmen"
+                },
+                {
+                    "id": "akademie-2024",
+                    "title": "Akademie 2024",
+                    "image": "/assets/imgs/downloaded/carmen_akademie_2024_1.webp",
+                    "url": "https://www.rajce.idnes.cz/lr-dance/album/ts-carmen-2024"
+                },
+                {
+                    "id": "primestsky-2024",
+                    "title": "Příměstské tábory 2024",
+                    "image": "/assets/imgs/downloaded/carmen_primestsky_2024_1.webp",
+                    "url": "https://www.rajce.idnes.cz/lr-dance/album/primestsky-tabor-carmen-2024"
+                }
+            ]
+        }
+    }
+}

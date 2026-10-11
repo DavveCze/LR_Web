@@ -1,6 +1,7 @@
 import React from "react";
 import { TrainerGrid } from "../components/ui/TrainerProfiles"; // Importujeme naši novou grid komponentu
 import { TrainingSchedule } from "../components/schedule/TrainingSchedule";
+import { PartnersSection } from "../components/ui/PartnersSection";
 
 export const ClubPage: React.FC = () => {
   return (
@@ -124,6 +125,7 @@ export const ClubPage: React.FC = () => {
 
       </section>
 
+      <PartnersSection className="mt-16" />
     </main>
   );
 };

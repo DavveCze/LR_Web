@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiUrl } from '../api/client';
 
 interface LoginResponse {
   success?: boolean;
@@ -19,9 +20,26 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [attempts, setAttempts] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
-  const [lockoutTime, setLockoutTime] = useState(0);
+  const [attempts, setAttempts] = useState<number>(() => {
+    const loginAttempts = localStorage.getItem('loginAttempts');
+    const lastAttemptTime = localStorage.getItem('lastAttemptTime');
+    if (lastAttemptTime && Date.now() - parseInt(lastAttemptTime, 10) > ATTEMPT_RESET_TIME) {
+      localStorage.removeItem('loginAttempts');
+      localStorage.removeItem('lastAttemptTime');
+      return 0;
+    }
+    return loginAttempts ? parseInt(loginAttempts, 10) : 0;
+  });
+  const [isLocked, setIsLocked] = useState<boolean>(() => {
+    const lockoutEndTime = localStorage.getItem('lockoutEndTime');
+    return lockoutEndTime ? parseInt(lockoutEndTime, 10) - Date.now() > 0 : false;
+  });
+  const [lockoutTime, setLockoutTime] = useState<number>(() => {
+    const lockoutEndTime = localStorage.getItem('lockoutEndTime');
+    if (!lockoutEndTime) return 0;
+    const remaining = parseInt(lockoutEndTime, 10) - Date.now();
+    return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
+  });
   const [isSecure, setIsSecure] = useState(false);
 
   useEffect(() => {
@@ -92,7 +110,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/api/login.php', {
+      const response = await fetch(apiUrl('login.php'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -111,7 +129,7 @@ export const LoginPage: React.FC = () => {
         setError(data.message || 'Login failed. Please try again.');
         registerFailedAttempt();
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again later.');
     } finally {
       setLoading(false);
@@ -119,35 +137,6 @@ export const LoginPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const lockoutEndTime = localStorage.getItem('lockoutEndTime');
-    const loginAttempts = localStorage.getItem('loginAttempts');
-    const lastAttemptTime = localStorage.getItem('lastAttemptTime');
-
-    if (lockoutEndTime) {
-      const remainingLockout = parseInt(lockoutEndTime, 10) - Date.now();
-      if (remainingLockout > 0) {
-        setIsLocked(true);
-        setLockoutTime(Math.ceil(remainingLockout / 1000));
-      } else {
-        localStorage.removeItem('lockoutEndTime');
-        localStorage.removeItem('loginAttempts');
-        localStorage.removeItem('lastAttemptTime');
-      }
-    }
-
-    if (loginAttempts) {
-      setAttempts(parseInt(loginAttempts, 10));
-    }
-
-    if (lastAttemptTime) {
-      const lastAttempt = parseInt(lastAttemptTime, 10);
-      if (Date.now() - lastAttempt > ATTEMPT_RESET_TIME) {
-        setAttempts(0);
-        localStorage.removeItem('loginAttempts');
-        localStorage.removeItem('lastAttemptTime');
-      }
-    }
-
     setIsSecure(window.location.protocol === 'https:');
   }, []);
 

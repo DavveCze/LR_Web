@@ -1,0 +1,105 @@
+# ==============================================================================
+# LR-Dance - Root .gitignore (Fullstack React 19 + PHP 8 + Docker + PostgreSQL)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Závislosti (Dependencies)
+# ------------------------------------------------------------------------------
+node_modules/
+vendor/
+
+# ------------------------------------------------------------------------------
+# 2. Build artefakty & Produkční výstupy
+# ------------------------------------------------------------------------------
+dist/
+dist-ssr/
+build/
+out/
+*.tsbuildinfo
+
+# ------------------------------------------------------------------------------
+# 3. Prostředí a citlivá data (Environment & Secrets)
+# ------------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.env
+*.env.local
+# Vzorové šablony konfigurace ponech sledované
+!.env.example
+!.env.template
+
+# ------------------------------------------------------------------------------
+# 4. Logy a debug soubory
+# ------------------------------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ------------------------------------------------------------------------------
+# 5. Mezipaměť a dočasné soubory (Cache & Locks)
+# ------------------------------------------------------------------------------
+.cache/
+.eslintcache
+.vite/
+*.tmp
+*.temp
+*.cache
+
+# Zámky runtime procesů a dat (zachovej package manažery)
+*.lock
+!package-lock.json
+!composer.lock
+*.json.lock
+
+# Dynamická data CMS a revize (ponech sledovaný výchozí site_content.json)
+LR_Web_BE/src/data/revisions/
+LR_Web_BE/src/data/*.lock
+
+# ------------------------------------------------------------------------------
+# 6. Databáze, lokální dumpy a SQLite
+# ------------------------------------------------------------------------------
+*.dump
+*.sql.gz
+*.sql.tar
+*.sqlite
+*.sqlite3
+*.db
+# SQL migrace a init skripty musí zůstat sledované
+!**/db/init/*.sql
+!**/db/migrations/*.sql
+
+# ------------------------------------------------------------------------------
+# 7. Lokální scrape exporty a dočasné skripty
+# ------------------------------------------------------------------------------
+brain_pages_crawl.json
+*crawl*.json
+scratch/
+.gemini/
+
+# ------------------------------------------------------------------------------
+# 8. Editor a operační systém (OS & IDE Artifacts)
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# IDEs
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.bak
+*.orig

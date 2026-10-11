@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { apiUrl } from "../../api/client";
 
-const API_URL = "http://localhost:8080/api/dancers.php";
+const API_URL = apiUrl('dancers.php');
 
 type Category = "" | "M" | "A" | "B" | "C" | "D" | "E";
 

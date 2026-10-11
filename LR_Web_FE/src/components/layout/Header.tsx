@@ -17,7 +17,7 @@ const NAV_ITEMS: NavItem[] = [
     href: "/nabidka-kurzu",
     children: [
       { label: "Mateřské školy", href: "/nabidka-kurzu/materinky" },
-      { label: "Základní školy", href: "/nabidka-kurzu/zakladnka" },
+      { label: "Základní školy", href: "/nabidka-kurzu/zakladka" },
       { label: "9. třída", href: "/nabidka-kurzu/konec-skoly" },
       { label: "Střední školy", href: "/nabidka-kurzu/tanecni" },
       { label: "Manž. a přát. páry", href: "/nabidka-kurzu/manzelske" },

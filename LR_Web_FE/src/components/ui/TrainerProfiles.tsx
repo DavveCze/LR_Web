@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { HelperImage, useRefreshingAsset } from "./HelperImage";
+import { HelperImage } from "./HelperImage";
+import { apiUrl } from "../../api/client";
 
 const path = "treneri"; // složka s obrázky trenérů
 
@@ -95,12 +96,12 @@ export const TrainerGrid: React.FC<TrainerGridProps> = ({ filterRole = "trainer"
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/trainers.php')
+    fetch(apiUrl('trainers.php'))
       .then(res => res.json())
       .then(data => {
         if (data.status === 'success') {
           // Filtrujeme pouze aktivní záznamy
-          let activeMembers = data.data.filter((t: TrainerProps) => t.is_active !== false && t.title === (filterRole === 'admin' ? 'Webmaster' : 'Trenér'));
+          const activeMembers = data.data.filter((t: TrainerProps) => t.is_active !== false && t.title === (filterRole === 'admin' ? 'Webmaster' : 'Trenér'));
 
           setTrainers(activeMembers);
         }

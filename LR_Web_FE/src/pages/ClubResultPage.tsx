@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DarkButton } from "../components/ui/ButtonPrefab";
+import { apiUrl } from "../api/client";
 
-const API_URL = "http://localhost:8080/api/dancers.php";
+const API_URL = apiUrl('dancers.php');
 
 type Result = {
   id: number;
@@ -23,6 +25,7 @@ function formatDate(value: string) {
 }
 
 export function ClubResultsPage() {
+  const navigate = useNavigate();
   const [results, setResults] = useState<Result[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,9 +44,16 @@ export function ClubResultsPage() {
     <main className="py-40 text-neutral-950">
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-12 flex flex-wrap items-center justify-between gap-4">
-          <h1 className="mb-12 text-3xl font-bold uppercase tracking-wide text-neutral-800">
-          Výsledky soutěží
+          <h1 className="text-3xl font-bold uppercase text-neutral-800">
+            Výsledky soutěží
           </h1>
+          <DarkButton
+            onClick={() => {
+              navigate("/klub/pary");
+            }}
+          >
+            Naše páry
+          </DarkButton>
         </div>
 
         {loading ? (
