@@ -4,9 +4,9 @@
  * nebo proměnnou VITE_API_URL, pokud je explicitně nastavena.
  */
 
-const rawBase = import.meta.env.VITE_API_URL;
+const rawBase = typeof import.meta.env.VITE_API_URL === "string" ? import.meta.env.VITE_API_URL.trim() : "";
 
-export const API_BASE_URL = rawBase
+export const API_BASE_URL = rawBase !== ""
   ? `${rawBase.replace(/\/$/, '')}/api`
   : '/api';
 

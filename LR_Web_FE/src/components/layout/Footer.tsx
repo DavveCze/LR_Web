@@ -80,9 +80,9 @@ export const Footer: FC = () => {
                 </a>
               </p>
               <p className="pt-2">
-                <strong>Bankovní spojení:</strong>
+                <strong>Platba:</strong>
                 <br />
-                1012808781/5500 (Raiffeisenbank)
+                Hradí se v hotovosti na lekcích a trénincích.
               </p>
               <div className="pt-2">
                 <Link

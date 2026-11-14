@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { apiUrl } from "../../api/client";
+import { ImagePickerInput } from "./ImagePickerInput";
 
 interface CarmenOverview {
   title: string;
@@ -286,16 +287,14 @@ export const CarmenAdminPanel: React.FC = () => {
               <div className="space-y-3">
                 {data.overview.slideshow.map((slide, idx) => (
                   <div key={idx} className="flex flex-wrap items-center gap-3 p-3 bg-neutral-50 border border-neutral-200 rounded">
-                    <img src={slide.src} alt={slide.alt} className="w-16 h-12 object-cover border" />
-                    <div className="flex-1 min-w-[200px]">
-                      <input
-                        type="text"
-                        className="w-full border border-neutral-300 p-1.5 rounded text-xs"
+                    <div className="flex-1 min-w-[280px]">
+                      <ImagePickerInput
                         value={slide.src}
                         placeholder="Cesta k obrázku (/assets/imgs/...)"
-                        onChange={(e) => {
+                        defaultFolder="carmen"
+                        onChange={(val) => {
                           const newSlides = [...data.overview.slideshow];
-                          newSlides[idx].src = e.target.value;
+                          newSlides[idx].src = val;
                           setData({
                             ...data,
                             overview: { ...data.overview, slideshow: newSlides },
@@ -613,9 +612,8 @@ export const CarmenAdminPanel: React.FC = () => {
             <div className="space-y-4">
               <label className="block text-sm font-semibold text-neutral-800">Alba fotogalerie Carmen</label>
               {data.fotogalerie.albums.map((album, idx) => (
-                <div key={album.id || idx} className="p-4 border border-neutral-200 rounded bg-neutral-50 flex flex-wrap gap-4 items-center">
-                  <img src={album.image} alt={album.title} className="w-20 h-16 object-cover border" />
-                  <div className="flex-1 min-w-[200px] space-y-2">
+                <div key={album.id || idx} className="p-4 border border-neutral-200 rounded bg-neutral-50 flex flex-wrap gap-4 items-start">
+                  <div className="flex-1 min-w-[240px] space-y-2">
                     <input
                       type="text"
                       className="w-full border border-neutral-300 p-1.5 rounded text-xs"
@@ -638,6 +636,19 @@ export const CarmenAdminPanel: React.FC = () => {
                       onChange={(e) => {
                         const newAlbums = [...data.fotogalerie.albums];
                         newAlbums[idx].url = e.target.value;
+                        setData({
+                          ...data,
+                          fotogalerie: { ...data.fotogalerie, albums: newAlbums },
+                        });
+                      }}
+                    />
+                    <ImagePickerInput
+                      label="Obalové foto alba"
+                      value={album.image}
+                      defaultFolder="carmen"
+                      onChange={(val) => {
+                        const newAlbums = [...data.fotogalerie.albums];
+                        newAlbums[idx].image = val;
                         setData({
                           ...data,
                           fotogalerie: { ...data.fotogalerie, albums: newAlbums },

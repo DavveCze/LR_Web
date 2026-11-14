@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { PartnersSection } from "../components/ui/PartnersSection";
 import { apiUrl } from "../api/client";
+import { PageHeader } from "../components/layout/PageHeader";
 
 export const ContactPage: React.FC = () => {
   const [name, setName] = useState("");
@@ -48,19 +48,11 @@ export const ContactPage: React.FC = () => {
   };
 
   return (
-    <main className="w-full bg-white font-sans text-neutral-800 pt-36 pb-24">
-      {/* HORNÍ DĚLÍCÍ ČÁRA */}
-      <div className="mx-auto max-w-5xl px-6">
-        <div className="border-t border-neutral-300" />
-      </div>
-
-      <div className="mx-auto max-w-5xl px-6 py-14">
-        {/* TITULEK STRÁNKY */}
-        <h1 className="mb-12 text-2xl font-bold uppercase tracking-wider text-neutral-900 border-b-2 border-neutral-900 pb-2 inline-block">
-          KONTAKT
-        </h1>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+    <div>
+      <PageHeader title="Kontakt" />
+      <main className="w-full bg-white font-sans text-neutral-800 pt-6 pb-24">
+        <div className="mx-auto max-w-5xl px-6 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* LEVÝ SLOUPCE: KDE TRÉNUJEME, KONTAKTY, BANKA */}
           <div className="lg:col-span-7 space-y-12">
             {/* KDE TRÉNUJEME */}
@@ -151,8 +143,8 @@ export const ContactPage: React.FC = () => {
                     </p>
                     <p>
                       <strong className="font-medium text-neutral-900">E-mail:</strong>{" "}
-                      <a href="mailto:carmen-dance@seznam.cz" className="hover:underline text-neutral-900">
-                        carmen-dance@seznam.cz
+                      <a href="mailto:l.skopalikova@gmail.com" className="hover:underline text-neutral-900">
+                        l.skopalikova@gmail.com
                       </a>
                     </p>
                   </div>
@@ -318,9 +310,7 @@ export const ContactPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* PARTNEŘI */}
-      <PartnersSection className="mt-16" />
     </main>
-  );
+  </div>
+);
 };

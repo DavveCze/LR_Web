@@ -1,18 +1,9 @@
 <?php
 declare(strict_types=1);
 
-header('Access-Control-Allow-Origin: http://localhost:5173');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Credentials: true');
-header('Content-Type: application/json; charset=utf-8');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../services/CstsService.php';
+header('Content-Type: application/json; charset=utf-8');
 
 function respond(int $status, array $payload): never
 {
@@ -60,6 +51,11 @@ function boolValue(mixed $value, bool $default = true): bool
         FILTER_VALIDATE_BOOLEAN,
         FILTER_NULL_ON_FAILURE
     ) ?? $default;
+}
+
+function toPgBool(mixed $value, bool $default = true): string
+{
+    return boolValue($value, $default) ? 'true' : 'false';
 }
 
 function validateCategory(?string $value): ?string
@@ -120,6 +116,32 @@ try {
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
+    // Náhled z ČSTS API
+    if (($_GET['action'] ?? '') === 'csts_preview') {
+        requireAuth();
+        $idt = (int) ($_GET['idt'] ?? 0);
+        if ($idt <= 0) {
+            respond(400, [
+                'status' => 'error',
+                'message' => 'Zadej platné ČSTS IDT.',
+            ]);
+        }
+
+        $service = new CstsService();
+        $athlete = $service->fetchAthlete($idt);
+        if (!$athlete) {
+            respond(404, [
+                'status' => 'error',
+                'message' => "Tanečník s IDT {$idt} nebyl v ČSTS nalezen nebo je služba dočasně nedostupná.",
+            ]);
+        }
+
+        respond(200, [
+            'status' => 'success',
+            'data' => $athlete,
+        ]);
+    }
+
     $view = $_GET['view'] ?? 'pairs';
     $admin = ($_GET['admin'] ?? '') === '1';
 
@@ -133,6 +155,12 @@ if ($method === 'GET') {
                 surname,
                 category_lat,
                 category_stt,
+                points_lat,
+                finals_lat,
+                points_stt,
+                finals_stt,
+                csts_idt,
+                csts_synced_at,
                 is_active,
                 is_public,
                 display_order
@@ -145,8 +173,15 @@ if ($method === 'GET') {
                 p.pair_id,
                 p.idt1,
                 p.idt2,
+                p.category_lat,
+                p.category_stt,
                 p.points,
                 p.finals,
+                p.points_lat,
+                p.finals_lat,
+                p.points_stt,
+                p.finals_stt,
+                p.csts_synced_at,
                 p.is_active,
                 p.is_public,
                 p.display_order,
@@ -156,7 +191,7 @@ if ($method === 'GET') {
                 d2.surname AS dancer2_surname
              FROM dance_pairs p
              JOIN dancers d1 ON d1.idt = p.idt1
-             JOIN dancers d2 ON d2.idt = p.idt2
+             LEFT JOIN dancers d2 ON d2.idt = p.idt2
              ORDER BY p.display_order, d1.surname, d2.surname'
         )->fetchAll();
 
@@ -169,11 +204,11 @@ if ($method === 'GET') {
                 r.location,
                 r.placement,
                 d1.name || \' \' || d1.surname AS dancer1,
-                d2.name || \' \' || d2.surname AS dancer2
+                CASE WHEN d2.idt IS NOT NULL THEN d2.name || \' \' || d2.surname ELSE NULL END AS dancer2
              FROM competition_results r
              JOIN dance_pairs p ON p.pair_id = r.pair_id
              JOIN dancers d1 ON d1.idt = p.idt1
-             JOIN dancers d2 ON d2.idt = p.idt2
+             LEFT JOIN dancers d2 ON d2.idt = p.idt2
              ORDER BY r.date DESC, r.id DESC'
         )->fetchAll();
 
@@ -191,71 +226,105 @@ if ($method === 'GET') {
         $rows = $pdo->query(
             'SELECT
                 p.pair_id,
+                p.category_lat AS pair_category_lat,
+                p.category_stt AS pair_category_stt,
                 p.points,
                 p.finals,
+                p.points_lat,
+                p.finals_lat,
+                p.points_stt,
+                p.finals_stt,
+                p.csts_synced_at,
                 p.display_order,
                 d1.idt AS dancer1_id,
                 d1.name AS dancer1_name,
                 d1.surname AS dancer1_surname,
                 d1.category_lat AS dancer1_lat,
                 d1.category_stt AS dancer1_stt,
+                d1.points_lat AS d1_points_lat,
+                d1.finals_lat AS d1_finals_lat,
+                d1.points_stt AS d1_points_stt,
+                d1.finals_stt AS d1_finals_stt,
                 d2.idt AS dancer2_id,
                 d2.name AS dancer2_name,
                 d2.surname AS dancer2_surname,
                 d2.category_lat AS dancer2_lat,
-                d2.category_stt AS dancer2_stt
+                d2.category_stt AS dancer2_stt,
+                d2.points_lat AS d2_points_lat,
+                d2.finals_lat AS d2_finals_lat,
+                d2.points_stt AS d2_points_stt,
+                d2.finals_stt AS d2_finals_stt
              FROM dance_pairs p
              JOIN dancers d1 ON d1.idt = p.idt1
-             JOIN dancers d2 ON d2.idt = p.idt2
+             LEFT JOIN dancers d2 ON d2.idt = p.idt2
              WHERE
                 p.is_active = TRUE
                 AND p.is_public = TRUE
                 AND d1.is_active = TRUE
                 AND d1.is_public = TRUE
-                AND d2.is_active = TRUE
-                AND d2.is_public = TRUE'
+                AND (d2.idt IS NULL OR (d2.is_active = TRUE AND d2.is_public = TRUE))'
         )->fetchAll();
 
         $pairs = array_map(static function (array $row): array {
-            $latCategories = array_filter([
-                $row['dancer1_lat'],
-                $row['dancer2_lat'],
-            ]);
+            $hasDancer2 = !empty($row['dancer2_id']);
 
-            $sttCategories = array_filter([
-                $row['dancer1_stt'],
-                $row['dancer2_stt'],
-            ]);
+            $hasExplicitCategories = ($row['pair_category_lat'] !== null || $row['pair_category_stt'] !== null);
 
-            usort(
-                $latCategories,
-                static fn ($a, $b) => categoryRank($b) <=> categoryRank($a)
-            );
+            if ($hasExplicitCategories) {
+                $lat = $row['pair_category_lat'];
+                $stt = $row['pair_category_stt'];
+            } else {
+                $latCategories = array_filter([
+                    $row['dancer1_lat'],
+                    $hasDancer2 ? $row['dancer2_lat'] : null,
+                ]);
 
-            usort(
-                $sttCategories,
-                static fn ($a, $b) => categoryRank($b) <=> categoryRank($a)
-            );
+                $sttCategories = array_filter([
+                    $row['dancer1_stt'],
+                    $hasDancer2 ? $row['dancer2_stt'] : null,
+                ]);
 
-            $lat = $latCategories[0] ?? null;
-            $stt = $sttCategories[0] ?? null;
+                usort(
+                    $latCategories,
+                    static fn ($a, $b) => categoryRank($b) <=> categoryRank($a)
+                );
+
+                usort(
+                    $sttCategories,
+                    static fn ($a, $b) => categoryRank($b) <=> categoryRank($a)
+                );
+
+                $lat = $latCategories[0] ?? null;
+                $stt = $sttCategories[0] ?? null;
+            }
+
+            $pointsLat = $lat ? (int) ($row['points_lat'] ?: $row['d1_points_lat']) : 0;
+            $finalsLat = $lat ? (int) ($row['finals_lat'] ?: $row['d1_finals_lat']) : 0;
+            $pointsStt = $stt ? (int) ($row['points_stt'] ?: $row['d1_points_stt']) : 0;
+            $finalsStt = $stt ? (int) ($row['finals_stt'] ?: $row['d1_finals_stt']) : 0;
 
             return [
                 'pair_id' => (int) $row['pair_id'],
+                'is_solo' => !$hasDancer2,
                 'dancer1' => [
                     'id' => (int) $row['dancer1_id'],
                     'name' => $row['dancer1_name'],
                     'surname' => $row['dancer1_surname'],
                 ],
-                'dancer2' => [
+                'dancer2' => $hasDancer2 ? [
                     'id' => (int) $row['dancer2_id'],
                     'name' => $row['dancer2_name'],
                     'surname' => $row['dancer2_surname'],
-                ],
+                ] : null,
                 'category_lat' => $lat,
                 'category_stt' => $stt,
                 'points' => (int) $row['points'],
                 'finals' => (bool) $row['finals'],
+                'points_lat' => $pointsLat,
+                'finals_lat' => $finalsLat,
+                'points_stt' => $pointsStt,
+                'finals_stt' => $finalsStt,
+                'csts_synced_at' => $row['csts_synced_at'] ?? null,
                 'display_order' => (int) $row['display_order'],
                 'best_rank' => max(categoryRank($lat), categoryRank($stt)),
             ];
@@ -286,6 +355,10 @@ if ($method === 'GET') {
                 d.surname,
                 d.category_lat,
                 d.category_stt,
+                d.points_lat,
+                d.finals_lat,
+                d.points_stt,
+                d.finals_stt,
                 d.display_order
              FROM dancers d
              WHERE
@@ -338,12 +411,16 @@ if ($method === 'GET') {
                 r.date,
                 r.location,
                 r.placement,
+                d1.name AS dancer1_name,
+                d1.surname AS dancer1_surname,
+                d2.name AS dancer2_name,
+                d2.surname AS dancer2_surname,
                 d1.name || \' \' || d1.surname AS dancer1,
-                d2.name || \' \' || d2.surname AS dancer2
+                CASE WHEN d2.idt IS NOT NULL THEN d2.name || \' \' || d2.surname ELSE NULL END AS dancer2
              FROM competition_results r
              JOIN dance_pairs p ON p.pair_id = r.pair_id
              JOIN dancers d1 ON d1.idt = p.idt1
-             JOIN dancers d2 ON d2.idt = p.idt2
+             LEFT JOIN dancers d2 ON d2.idt = p.idt2
              WHERE
                 p.is_active = TRUE
                 AND p.is_public = TRUE
@@ -367,6 +444,64 @@ requireAuth();
 $payload = input();
 $action = $payload['action'] ?? '';
 
+// 1. Vytvoření / import tanečníka přímo z ČSTS podle IDT
+if ($method === 'POST' && $action === 'create_from_csts') {
+    $idt = (int) ($payload['idt'] ?? 0);
+    $linkPartner = boolValue($payload['link_partner'] ?? true, true);
+
+    if ($idt <= 0) {
+        respond(400, [
+            'status' => 'error',
+            'message' => 'Zadej platné ČSTS IDT.',
+        ]);
+    }
+
+    try {
+        $service = new CstsService();
+        $result = $service->importOrUpdateAthlete($pdo, $idt, $linkPartner);
+
+        $pairCount = count($result['pair_ids'] ?? []);
+        $msg = 'Tanečník ' . ($result['athlete']['full_name'] ?? '') . ' byl úspěšně importován z ČSTS.';
+        if ($pairCount > 0) {
+            $msg .= " Vytvořeno/propojeno párů: {$pairCount}.";
+        }
+
+        respond(201, [
+            'status' => 'success',
+            'message' => $msg,
+            'data' => $result,
+        ]);
+    } catch (Throwable $e) {
+        respond(500, [
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ]);
+    }
+}
+
+// 2. Ruční spuštění hromadné synchronizace bodů z ČSTS pro všechny aktivní páry/tanečníky
+if ($method === 'POST' && $action === 'sync_csts') {
+    try {
+        $service = new CstsService();
+        $result = $service->syncAllActive($pdo);
+
+        respond(200, [
+            'status' => 'success',
+            'message' => sprintf(
+                'Synchronizace s ČSTS dokončena. Aktualizováno %d z %d aktivních tanečníků.',
+                $result['synced'],
+                $result['total_active']
+            ),
+            'data' => $result,
+        ]);
+    } catch (Throwable $e) {
+        respond(500, [
+            'status' => 'error',
+            'message' => 'Chyba synchronizace s ČSTS: ' . $e->getMessage(),
+        ]);
+    }
+}
+
 if ($method === 'POST' && $action === 'create_dancer') {
     $name = trim((string) ($payload['name'] ?? ''));
     $surname = trim((string) ($payload['surname'] ?? ''));
@@ -378,12 +513,19 @@ if ($method === 'POST' && $action === 'create_dancer') {
         ]);
     }
 
+    $cstsIdt = !empty($payload['csts_idt']) && (int) $payload['csts_idt'] > 0 ? (int) $payload['csts_idt'] : null;
+
     $statement = $pdo->prepare(
         'INSERT INTO dancers (
             name,
             surname,
             category_lat,
             category_stt,
+            points_lat,
+            finals_lat,
+            points_stt,
+            finals_stt,
+            csts_idt,
             is_active,
             is_public,
             display_order
@@ -392,27 +534,44 @@ if ($method === 'POST' && $action === 'create_dancer') {
             :surname,
             :category_lat,
             :category_stt,
+            :points_lat,
+            :finals_lat,
+            :points_stt,
+            :finals_stt,
+            :csts_idt,
             :is_active,
             :is_public,
             :display_order
          ) RETURNING idt'
     );
 
-    $statement->execute([
-        ':name' => $name,
-        ':surname' => $surname,
-        ':category_lat' => validateCategory($payload['category_lat'] ?? null),
-        ':category_stt' => validateCategory($payload['category_stt'] ?? null),
-        ':is_active' => boolValue($payload['is_active'] ?? true),
-        ':is_public' => boolValue($payload['is_public'] ?? true),
-        ':display_order' => (int) ($payload['display_order'] ?? 0),
-    ]);
+    try {
+        $statement->execute([
+            ':name' => $name,
+            ':surname' => $surname,
+            ':category_lat' => validateCategory($payload['category_lat'] ?? null),
+            ':category_stt' => validateCategory($payload['category_stt'] ?? null),
+            ':points_lat' => (int) ($payload['points_lat'] ?? 0),
+            ':finals_lat' => (int) ($payload['finals_lat'] ?? 0),
+            ':points_stt' => (int) ($payload['points_stt'] ?? 0),
+            ':finals_stt' => (int) ($payload['finals_stt'] ?? 0),
+            ':csts_idt' => $cstsIdt,
+            ':is_active' => toPgBool($payload['is_active'] ?? true),
+            ':is_public' => toPgBool($payload['is_public'] ?? true),
+            ':display_order' => (int) ($payload['display_order'] ?? 0),
+        ]);
 
-    respond(201, [
-        'status' => 'success',
-        'id' => $statement->fetch()['idt'],
-        'message' => 'Tanečník přidán.',
-    ]);
+        respond(201, [
+            'status' => 'success',
+            'id' => $statement->fetch()['idt'],
+            'message' => 'Tanečník přidán.',
+        ]);
+    } catch (Throwable $e) {
+        respond(500, [
+            'status' => 'error',
+            'message' => 'Chyba při ukládání tanečníka: ' . $e->getMessage(),
+        ]);
+    }
 }
 
 if ($method === 'PUT' && $action === 'update_dancer') {
@@ -427,6 +586,8 @@ if ($method === 'PUT' && $action === 'update_dancer') {
         ]);
     }
 
+    $cstsIdt = !empty($payload['csts_idt']) && (int) $payload['csts_idt'] > 0 ? (int) $payload['csts_idt'] : null;
+
     $statement = $pdo->prepare(
         'UPDATE dancers
          SET
@@ -434,75 +595,124 @@ if ($method === 'PUT' && $action === 'update_dancer') {
             surname = :surname,
             category_lat = :category_lat,
             category_stt = :category_stt,
+            points_lat = :points_lat,
+            finals_lat = :finals_lat,
+            points_stt = :points_stt,
+            finals_stt = :finals_stt,
+            csts_idt = :csts_idt,
             is_active = :is_active,
             is_public = :is_public,
             display_order = :display_order
          WHERE idt = :idt'
     );
 
-    $statement->execute([
-        ':idt' => $id,
-        ':name' => $name,
-        ':surname' => $surname,
-        ':category_lat' => validateCategory($payload['category_lat'] ?? null),
-        ':category_stt' => validateCategory($payload['category_stt'] ?? null),
-        ':is_active' => boolValue($payload['is_active'] ?? true),
-        ':is_public' => boolValue($payload['is_public'] ?? true),
-        ':display_order' => (int) ($payload['display_order'] ?? 0),
-    ]);
+    try {
+        $statement->execute([
+            ':idt' => $id,
+            ':name' => $name,
+            ':surname' => $surname,
+            ':category_lat' => validateCategory($payload['category_lat'] ?? null),
+            ':category_stt' => validateCategory($payload['category_stt'] ?? null),
+            ':points_lat' => (int) ($payload['points_lat'] ?? 0),
+            ':finals_lat' => (int) ($payload['finals_lat'] ?? 0),
+            ':points_stt' => (int) ($payload['points_stt'] ?? 0),
+            ':finals_stt' => (int) ($payload['finals_stt'] ?? 0),
+            ':csts_idt' => $cstsIdt,
+            ':is_active' => toPgBool($payload['is_active'] ?? true),
+            ':is_public' => toPgBool($payload['is_public'] ?? true),
+            ':display_order' => (int) ($payload['display_order'] ?? 0),
+        ]);
 
-    respond(200, [
-        'status' => 'success',
-        'message' => 'Tanečník upraven.',
-    ]);
+        respond(200, [
+            'status' => 'success',
+            'message' => 'Tanečník upraven.',
+        ]);
+    } catch (Throwable $e) {
+        respond(500, [
+            'status' => 'error',
+            'message' => 'Chyba při úpravě tanečníka: ' . $e->getMessage(),
+        ]);
+    }
 }
 
 if ($method === 'POST' && $action === 'create_pair') {
     $idt1 = (int) ($payload['idt1'] ?? 0);
-    $idt2 = (int) ($payload['idt2'] ?? 0);
+    $rawIdt2 = $payload['idt2'] ?? null;
+    $idt2 = ($rawIdt2 !== null && $rawIdt2 !== '' && (int) $rawIdt2 > 0) ? (int) $rawIdt2 : null;
 
-    if ($idt1 <= 0 || $idt2 <= 0 || $idt1 === $idt2) {
+    if ($idt1 <= 0) {
         respond(400, [
             'status' => 'error',
-            'message' => 'Vyber dva různé tanečníky.',
+            'message' => 'Vyber hlavního tanečníka.',
         ]);
     }
 
-    $firstId = min($idt1, $idt2);
-    $secondId = max($idt1, $idt2);
+    if ($idt2 !== null && $idt1 === $idt2) {
+        respond(400, [
+            'status' => 'error',
+            'message' => 'Pár musí tvořit dva různí tanečníci (nebo ponech druhého prázdného pro sólo).',
+        ]);
+    }
 
-    $existingPair = $pdo->prepare(
-        'SELECT pair_id
-         FROM dance_pairs
-         WHERE idt1 = :idt1 AND idt2 = :idt2
-         LIMIT 1'
-    );
+    if ($idt2 === null) {
+        $existingPair = $pdo->prepare(
+            'SELECT pair_id
+             FROM dance_pairs
+             WHERE idt1 = :idt1 AND idt2 IS NULL
+             LIMIT 1'
+        );
+        $existingPair->execute([':idt1' => $idt1]);
+    } else {
+        $firstId = min($idt1, $idt2);
+        $secondId = max($idt1, $idt2);
 
-    $existingPair->execute([
-        ':idt1' => $firstId,
-        ':idt2' => $secondId,
-    ]);
+        $existingPair = $pdo->prepare(
+            'SELECT pair_id
+             FROM dance_pairs
+             WHERE (idt1 = :idt1 AND idt2 = :idt2) OR (idt1 = :idt2 AND idt2 = :idt1)
+             LIMIT 1'
+        );
+        $existingPair->execute([
+            ':idt1' => $firstId,
+            ':idt2' => $secondId,
+        ]);
+    }
 
     $existing = $existingPair->fetch();
 
     if ($existing) {
         respond(409, [
             'status' => 'error',
-            'message' => 'Tento taneční pár již existuje.',
+            'message' => $idt2 === null ? 'Tento tanečník již má vytvořenou sólo registraci.' : 'Tento taneční pár již existuje.',
             'pair_id' => (int) $existing['pair_id'],
         ]);
     }
+
+    $firstId = $idt2 !== null ? min($idt1, $idt2) : $idt1;
+    $secondId = $idt2 !== null ? max($idt1, $idt2) : null;
 
     $statement = $pdo->prepare(
         'INSERT INTO dance_pairs (
             idt1,
             idt2,
+            category_lat,
+            category_stt,
+            points_lat,
+            finals_lat,
+            points_stt,
+            finals_stt,
             is_active,
             is_public,
             display_order
         ) VALUES (
             :idt1,
             :idt2,
+            :category_lat,
+            :category_stt,
+            :points_lat,
+            :finals_lat,
+            :points_stt,
+            :finals_stt,
             :is_active,
             :is_public,
             :display_order
@@ -514,8 +724,14 @@ if ($method === 'POST' && $action === 'create_pair') {
         $statement->execute([
             ':idt1' => $firstId,
             ':idt2' => $secondId,
-            ':is_active' => boolValue($payload['is_active'] ?? true),
-            ':is_public' => boolValue($payload['is_public'] ?? true),
+            ':category_lat' => validateCategory($payload['category_lat'] ?? null),
+            ':category_stt' => validateCategory($payload['category_stt'] ?? null),
+            ':points_lat' => (int) ($payload['points_lat'] ?? 0),
+            ':finals_lat' => (int) ($payload['finals_lat'] ?? 0),
+            ':points_stt' => (int) ($payload['points_stt'] ?? 0),
+            ':finals_stt' => (int) ($payload['finals_stt'] ?? 0),
+            ':is_active' => toPgBool($payload['is_active'] ?? true),
+            ':is_public' => toPgBool($payload['is_public'] ?? true),
             ':display_order' => (int) ($payload['display_order'] ?? 0),
         ]);
 
@@ -524,13 +740,13 @@ if ($method === 'POST' && $action === 'create_pair') {
         respond(201, [
             'status' => 'success',
             'id' => (int) $createdPair['pair_id'],
-            'message' => 'Taneční pár vytvořen.',
+            'message' => $idt2 === null ? 'Sólo tanečník zaregistrován.' : 'Taneční pár vytvořen.',
         ]);
     } catch (PDOException $exception) {
         if ($exception->getCode() === '23505') {
             respond(409, [
                 'status' => 'error',
-                'message' => 'Tento taneční pár již existuje.',
+                'message' => $idt2 === null ? 'Tento tanečník již má vytvořenou sólo registraci.' : 'Tento taneční pár již existuje.',
             ]);
         }
 
@@ -551,36 +767,77 @@ if ($method === 'PUT' && $action === 'update_pair') {
     $statement = $pdo->prepare(
         'UPDATE dance_pairs
          SET
+            category_lat = :category_lat,
+            category_stt = :category_stt,
+            points_lat = :points_lat,
+            finals_lat = :finals_lat,
+            points_stt = :points_stt,
+            finals_stt = :finals_stt,
             is_active = :is_active,
             is_public = :is_public,
             display_order = :display_order
          WHERE pair_id = :pair_id'
     );
 
-    $statement->execute([
-        ':pair_id' => $pairId,
-        ':is_active' => boolValue($payload['is_active'] ?? true),
-        ':is_public' => boolValue($payload['is_public'] ?? true),
-        ':display_order' => (int) ($payload['display_order'] ?? 0),
-    ]);
+    try {
+        $statement->execute([
+            ':pair_id' => $pairId,
+            ':category_lat' => validateCategory($payload['category_lat'] ?? null),
+            ':category_stt' => validateCategory($payload['category_stt'] ?? null),
+            ':points_lat' => (int) ($payload['points_lat'] ?? 0),
+            ':finals_lat' => (int) ($payload['finals_lat'] ?? 0),
+            ':points_stt' => (int) ($payload['points_stt'] ?? 0),
+            ':finals_stt' => (int) ($payload['finals_stt'] ?? 0),
+            ':is_active' => toPgBool($payload['is_active'] ?? true),
+            ':is_public' => toPgBool($payload['is_public'] ?? true),
+            ':display_order' => (int) ($payload['display_order'] ?? 0),
+        ]);
 
-    respond(200, [
-        'status' => 'success',
-        'message' => 'Taneční pár upraven.',
-    ]);
+        respond(200, [
+            'status' => 'success',
+            'message' => 'Taneční pár upraven.',
+        ]);
+    } catch (Throwable $e) {
+        respond(500, [
+            'status' => 'error',
+            'message' => 'Chyba při úpravě tanečního páru: ' . $e->getMessage(),
+        ]);
+    }
 }
 
 if ($method === 'POST' && $action === 'create_result') {
-    $pairId = (int) ($payload['pair_id'] ?? 0);
     $competition = trim((string) ($payload['competition_name'] ?? ''));
     $location = trim((string) ($payload['location'] ?? ''));
-    $placement = trim((string) ($payload['placement'] ?? ''));
     $date = trim((string) ($payload['date'] ?? ''));
 
-    if ($pairId <= 0 || $competition === '' || $location === '' || $placement === '' || $date === '') {
+    if ($competition === '' || $location === '' || $date === '') {
         respond(400, [
             'status' => 'error',
-            'message' => 'Vyplň pár, soutěž, datum, místo i umístění.',
+            'message' => 'Vyplň soutěž, datum a místo konání.',
+        ]);
+    }
+
+    // Podpora hromadného přidání (entries: [{ pair_id, placement }]) i původního jednoho výsledku
+    $entries = [];
+    if (!empty($payload['entries']) && is_array($payload['entries'])) {
+        foreach ($payload['entries'] as $item) {
+            $pId = (int) ($item['pair_id'] ?? 0);
+            $plc = trim((string) ($item['placement'] ?? ''));
+            if ($pId > 0 && $plc !== '') {
+                $entries[] = ['pair_id' => $pId, 'placement' => $plc];
+            }
+        }
+    } elseif (!empty($payload['pair_id']) && !empty($payload['placement'])) {
+        $entries[] = [
+            'pair_id' => (int) $payload['pair_id'],
+            'placement' => trim((string) $payload['placement']),
+        ];
+    }
+
+    if (empty($entries)) {
+        respond(400, [
+            'status' => 'error',
+            'message' => 'Přidej alespoň jeden taneční pár / sólo s umístěním.',
         ]);
     }
 
@@ -600,19 +857,30 @@ if ($method === 'POST' && $action === 'create_result') {
          ) RETURNING id'
     );
 
-    $statement->execute([
-        ':pair_id' => $pairId,
-        ':competition_name' => $competition,
-        ':date' => $date,
-        ':location' => $location,
-        ':placement' => $placement,
-    ]);
+    $pdo->beginTransaction();
+    try {
+        $lastId = 0;
+        foreach ($entries as $entry) {
+            $statement->execute([
+                ':pair_id' => $entry['pair_id'],
+                ':competition_name' => $competition,
+                ':date' => $date,
+                ':location' => $location,
+                ':placement' => $entry['placement'],
+            ]);
+            $lastId = (int) $statement->fetch()['id'];
+        }
+        $pdo->commit();
 
-    respond(201, [
-        'status' => 'success',
-        'id' => $statement->fetch()['id'],
-        'message' => 'Výsledek přidán.',
-    ]);
+        respond(201, [
+            'status' => 'success',
+            'id' => $lastId,
+            'message' => count($entries) > 1 ? 'Výsledky byly úspěšně přidány (' . count($entries) . ').' : 'Výsledek přidán.',
+        ]);
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 }
 
 if ($method === 'DELETE' && $action === 'delete_pair') {

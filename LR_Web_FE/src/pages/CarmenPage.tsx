@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { DarkButton } from "../components/ui/ButtonPrefab";
 import { Slideshow } from "../components/ui/Slideshow";
-import { PartnersSection } from "../components/ui/PartnersSection";
 import { RajceGallery } from "../components/gallery/RajceGallery";
+import { PageHeader } from "../components/layout/PageHeader";
 import { apiUrl } from "../api/client";
 
 type CarmenTab = "prehled" | "tabor" | "primestsky" | "vikend" | "fotogalerie";
@@ -170,21 +170,29 @@ export const CarmenPage: React.FC = () => {
     };
   }, []);
 
-  return (
-    <main className="w-full bg-white font-sans text-neutral-800 pt-36 pb-24">
-      {/* HORNÍ DĚLÍCÍ ČÁRA */}
-      <div className="mx-auto max-w-5xl px-6">
-        <div className="border-t border-neutral-300" />
-      </div>
+  const getCarmenTitle = () => {
+    switch (activeTab) {
+      case "tabor":
+        return content.tabor.title || "Spací tábor";
+      case "primestsky":
+        return content.primestsky.title || "Příměstský tábor";
+      case "vikend":
+        return content.vikend.title || "Taneční víkend";
+      case "fotogalerie":
+        return "Fotogalerie Carmen";
+      default:
+        return content.overview.title || "Taneční škola Carmen";
+    }
+  };
 
-      <div className="mx-auto max-w-5xl px-6 py-14">
-        {/* 1. ZÁLOŽKA: PŘEHLED (TŠ CARMEN - 1:1 DLE SCREENSHOTU) */}
-        {activeTab === "prehled" && (
-          <section className="space-y-10">
-            {/* HLAVNÍ TITULEK */}
-            <h1 className="text-3xl md:text-4xl font-extrabold uppercase tracking-wide text-neutral-900">
-              {content.overview.title}
-            </h1>
+  return (
+    <div>
+      <PageHeader title={getCarmenTitle()} />
+      <main className="w-full bg-white font-sans text-neutral-800 pt-6 pb-24">
+        <div className="mx-auto max-w-5xl px-6 py-6">
+          {/* 1. ZÁLOŽKA: PŘEHLED (TŠ CARMEN - 1:1 DLE SCREENSHOTU) */}
+          {activeTab === "prehled" && (
+            <section className="space-y-10">
 
             {/* ODSTAVCE S CHEVRONEM › A ZVÝRAZNĚNÝM TEXTEM */}
             <div className="space-y-6 text-[18px] md:text-[20px] font-light leading-[1.6] text-neutral-600">
@@ -465,9 +473,7 @@ export const CarmenPage: React.FC = () => {
           </section>
         )}
       </div>
-
-      {/* PARTNEŘI */}
-      <PartnersSection className="mt-16" />
     </main>
-  );
+  </div>
+);
 };

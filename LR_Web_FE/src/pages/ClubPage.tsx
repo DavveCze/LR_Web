@@ -1,14 +1,13 @@
 import React from "react";
 import { TrainerGrid } from "../components/ui/TrainerProfiles"; // Importujeme naši novou grid komponentu
 import { TrainingSchedule } from "../components/schedule/TrainingSchedule";
-import { PartnersSection } from "../components/ui/PartnersSection";
+import { PageHeader } from "../components/layout/PageHeader";
 
 export const ClubPage: React.FC = () => {
   return (
-    <main className="w-full bg-white font-sans text-gray-800 py-40">
-      <div className="mx-auto max-w-5xl px-6">
-        <div className="border-t border-neutral-300" />
-      </div>
+    <div>
+      <PageHeader title="LR Dance Klub" />
+      <main className="w-full bg-white font-sans text-gray-800 py-10">
       {/* Úvodní texty */}
       <section className="max-w-5xl mx-auto px-6 py-12">
         <div className="mx-auto max-w-4xl space-y-2 text-[20px] font-light leading-[1.6] text-neutral-500 md:text-[21px]">
@@ -116,16 +115,13 @@ export const ClubPage: React.FC = () => {
           </div>
           <div className="border-t border-gray-200"></div>
           <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="text-base font-medium text-gray-800">Číslo účtu (VS=rodné číslo)</div>
-            <div className="text-base font-medium text-gray-800 text-right">1012808781/5500</div>
+            <div className="text-base font-medium text-gray-800">Způsob úhrady</div>
+            <div className="text-base font-medium text-gray-800 text-right">V hotovosti (pololetní platba)</div>
           </div>
         </div>
-        
-        <p className="text-sm text-gray-600 mt-4 text-right">(pololetní platba)</p>
 
       </section>
-
-      <PartnersSection className="mt-16" />
     </main>
-  );
+  </div>
+);
 };

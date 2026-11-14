@@ -1,22 +1,15 @@
 import React from "react";
-import { PartnersSection } from "../components/ui/PartnersSection";
+import { PageHeader } from "../components/layout/PageHeader";
 
 export const PrivacyPolicyPage: React.FC = () => {
   return (
-    <main className="w-full bg-white font-sans text-neutral-800 pt-36 pb-24">
-      {/* HORNÍ DĚLÍCÍ ČÁRA */}
-      <div className="mx-auto max-w-5xl px-6">
-        <div className="border-t border-neutral-300" />
-      </div>
-
-      <article className="mx-auto max-w-4xl px-6 py-14">
-        <h1 className="mb-4 text-2xl md:text-3xl font-bold uppercase tracking-wider text-neutral-900 border-b-2 border-neutral-900 pb-3 inline-block">
-          ZÁSADY OCHRANY OSOBNÍCH ÚDAJŮ (GDPR) A INFORMACE O COOKIES
-        </h1>
-
-        <p className="mt-4 text-sm text-neutral-500">
-          Poslední aktualizace: {new Date().toLocaleDateString("cs-CZ")} | V souladu s nařízením (EU) 2016/679 (GDPR) a § 89 zákona č. 127/2005 Sb.
-        </p>
+    <div>
+      <PageHeader title="Ochrana údajů" />
+      <main className="w-full bg-white font-sans text-neutral-800 pt-6 pb-24">
+        <article className="mx-auto max-w-4xl px-6 py-6">
+          <p className="mt-2 text-sm text-neutral-500">
+            Poslední aktualizace: {new Date().toLocaleDateString("cs-CZ")} | V souladu s nařízením (EU) 2016/679 (GDPR) a § 89 zákona č. 127/2005 Sb.
+          </p>
 
         <div className="mt-10 space-y-8 text-neutral-700 leading-relaxed text-base">
           {/* 1. Správce */}
@@ -119,9 +112,7 @@ export const PrivacyPolicyPage: React.FC = () => {
           </section>
         </div>
       </article>
-
-      {/* PARTNEŘI */}
-      <PartnersSection className="mt-16" />
     </main>
-  );
+  </div>
+);
 };

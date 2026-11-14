@@ -1,7 +1,8 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { HomeButton } from "../components/ui/HomeButton";
-import { PartnersSection } from "../components/ui/PartnersSection";
+import { LightButton, DarkButton } from "../components/ui/ButtonPrefab";
+import { PageHeader } from "../components/layout/PageHeader";
 
 export interface CourseDetail {
   id: string;
@@ -10,6 +11,7 @@ export interface CourseDetail {
   subtitle: string;
   buttonLabel: string;
   image: string;
+  imagePosition?: string;
   paragraphs: string[];
   when: string;
   where: string;
@@ -134,6 +136,7 @@ const COURSES_DATA: CourseDetail[] = [
     subtitle: "Máš ambice vyhrávat medaile, nebo chceš tančit jen pro zábavu?",
     buttonLabel: "Sportovní tanec",
     image: "/assets/imgs/downloaded/soutez_medailove_pozice_1.webp",
+    imagePosition: "object-[center_15%]",
     paragraphs: [
       "LR Cosmetic dance team je sportovní taneční klub, který zastřešuje Český svaz tanečního sportu. Zaměřujeme se na latinskoamerické a standardní tance. Výuka probíhá na hobby nebo profesionální úrovni a je jen na Vás, kterou si zvolíte.",
       "Tréninkové možnosti jsou rozděleny do několika kategorií: Děti (od 6 let), Junioři (od 8 let), Mládež (od 14 let), Dospělí (od 18 let).",
@@ -153,35 +156,30 @@ export const CoursesPage: React.FC = () => {
     ? COURSES_DATA.find((c) => c.slugs.includes(categorySlug) || c.id === categorySlug)
     : null;
 
+  const pageTitle = selectedCategory ? selectedCategory.title : "Nabídka kurzů";
+
   return (
-    <main className="w-full bg-white font-sans text-neutral-800 pt-36 pb-24">
-      {/* HORNÍ DĚLÍCÍ ČÁRA */}
-      <div className="mx-auto max-w-5xl px-6">
-        <div className="border-t border-neutral-300" />
-      </div>
-
-      {selectedCategory ? (
-        /* DETAIL KURZU */
-        <section className="mx-auto max-w-5xl px-6 py-14">
-          <div className="mb-6">
-            <HomeButton
-              color="#393939"
-              content="Nabídka kurzů"
-              href="/nabidka-kurzu"
-              arrows={false}
-            />
-          </div>
-
-          <h1 className="mb-8 text-2xl font-bold uppercase tracking-wider text-neutral-900 border-b-2 border-neutral-900 pb-2 inline-block">
-            {selectedCategory.title}
-          </h1>
+    <div>
+      <PageHeader title={pageTitle} />
+      <main className="w-full bg-white font-sans text-neutral-800 pt-6 pb-24">
+        {selectedCategory ? (
+          /* DETAIL KURZU */
+          <section className="mx-auto max-w-5xl px-6 py-8">
+            <div className="mb-6">
+              <LightButton
+                href="/nabidka-kurzu"
+                className="px-5 py-2.5 font-medium"
+              >
+                ‹ Zpět na nabídku kurzů
+              </LightButton>
+            </div>
 
           {/* FOTOGRAFIE */}
           <div className="mb-10 overflow-hidden border border-neutral-200">
             <img
               src={selectedCategory.image}
               alt={selectedCategory.title}
-              className="w-full max-h-[420px] object-cover"
+              className={`w-full max-h-[460px] object-cover ${selectedCategory.imagePosition || "object-center"}`}
             />
           </div>
 
@@ -220,27 +218,23 @@ export const CoursesPage: React.FC = () => {
 
           {/* AKČNÍ TLAČÍTKA */}
           <div className="mt-10 flex flex-wrap gap-4">
-            <HomeButton
-              color="#393939"
-              content="Registrace"
+            <DarkButton
               href={selectedCategory.registrationUrl || "/prihlaska"}
-              arrows={true}
-            />
-            <HomeButton
-              color="#ffffff"
-              content="Nabídka kurzů"
+              className="px-6 py-3 font-medium"
+            >
+              Registrace
+            </DarkButton>
+            <LightButton
               href="/nabidka-kurzu"
-              arrows={false}
-            />
+              className="px-6 py-3 font-medium"
+            >
+              Nabídka kurzů
+            </LightButton>
           </div>
         </section>
       ) : (
         /* PŘEHLED VŠECH KURZŮ */
-        <section className="mx-auto max-w-5xl px-6 py-14">
-          <h1 className="mb-12 text-2xl font-bold uppercase tracking-wider text-neutral-900 border-b-2 border-neutral-900 pb-2 inline-block">
-            TANEČNÍ KURZY
-          </h1>
-
+        <section className="mx-auto max-w-5xl px-6 py-8">
           <div className="space-y-12">
             {COURSES_DATA.map((course, idx) => {
               const isEven = idx % 2 === 0;
@@ -280,7 +274,7 @@ export const CoursesPage: React.FC = () => {
                           color="#393939"
                           content={course.buttonLabel}
                           href={`/nabidka-kurzu/${course.slugs[0]}`}
-                          arrows={isEven}
+                          direction={isEven ? "left" : "right"}
                         />
                       </div>
                     </div>
@@ -296,9 +290,7 @@ export const CoursesPage: React.FC = () => {
           </div>
         </section>
       )}
-
-      {/* PARTNEŘI */}
-      <PartnersSection className="mt-16" />
     </main>
-  );
+  </div>
+);
 };

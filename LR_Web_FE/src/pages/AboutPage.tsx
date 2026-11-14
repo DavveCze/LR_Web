@@ -1,14 +1,13 @@
 import type { FC } from "react";
 import { TeamSection } from "../components/ui/TeamSection";
 import { PartnersSection } from "../components/ui/PartnersSection";
+import { PageHeader } from "../components/layout/PageHeader";
 
 export const AboutPage: FC = () => {
   return (
-    <main className="w-full bg-white font-sans text-neutral-800 pt-36 pb-24">
-      {/* HORNÍ DĚLÍCÍ ČÁRA */}
-      <div className="mx-auto max-w-5xl px-6">
-        <div className="border-t border-neutral-300" />
-      </div>
+    <div>
+      <PageHeader title="O nás" />
+      <main className="w-full bg-white font-sans text-neutral-800 pt-6 pb-24">
 
       {/* 1. SEKCE: HISTORIE */}
       <section className="mx-auto max-w-5xl px-6 py-14">
@@ -65,5 +64,6 @@ export const AboutPage: FC = () => {
       {/* 3. SEKCE: PARTNEŘI */}
       <PartnersSection />
     </main>
-  );
+  </div>
+);
 };

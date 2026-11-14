@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 720" width="100%" height="100%">
+  <!-- Definice stylů -->
+  <style>
+    .skin {
+      fill: #F5B4B6;
+      stroke: #000000;
+      stroke-width: 3;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+    .man {
+      fill: #000000;
+      stroke: #000000;
+      stroke-width: 2;
+      stroke-linejoin: round;
+    }
+    .woman {
+      fill: #E10B14;
+      stroke: #000000;
+      stroke-width: 3;
+      stroke-linejoin: round;
+    }
+    .logo-text-top {
+      font-family: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+      font-weight: 900;
+      font-size: 74px;
+      fill: #000000;
+      letter-spacing: 1px;
+    }
+    .logo-text-bottom {
+      font-family: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+      font-weight: 900;
+      font-size: 98px;
+      fill: #000000;
+      letter-spacing: 2px;
+    }
+  </style>
+
+  <!-- LEVÁ POSTAVA (TANEČNÍK) -->
+  <g id="tanecnik">
+    <!-- Horní ruka (zdvižená) -->
+    <path class="skin" d="M 188,35 L 198,35 C 198,18 206,8 220,3 L 220,58 L 188,35 Z" />
+    <!-- Spojená ruka uprostřed -->
+    <path class="skin" d="M 358,173 L 392,173 L 392,186 L 385,186 L 385,196 L 358,173 Z" />
+    <!-- Hlava -->
+    <circle class="skin" cx="262" cy="145" r="42" />
+    <!-- Tělo a končetiny -->
+    <path class="man" d="M 188,32 
+                         L 221,57 
+                         C 192,98 196,158 232,190 
+                         C 268,221 324,215 358,172 
+                         L 389,197 
+                         C 356,238 312,253 271,253 
+                         L 268,269 
+                         C 318,286 340,335 316,396 
+                         L 350,428 
+                         L 272,428 
+                         L 272,398 
+                         C 292,348 278,311 232,310 
+                         C 178,309 132,344 98,398 
+                         L 98,428 
+                         L 4,428 
+                         L 52,396 
+                         C 88,332 135,280 198,269 
+                         L 190,213 
+                         C 145,152 145,88 188,32 Z" />
+  </g>
+
+  <!-- PRAVÁ POSTAVA (TANEČNICE) -->
+  <g id="tanecnice">
+    <!-- Horní ruka (zdvižená) -->
+    <path class="skin" d="M 605,35 L 595,35 C 595,18 587,8 573,3 L 573,58 L 605,35 Z" />
+    <!-- Spojená ruka uprostřed (překrývá ruku tanečníka) -->
+    <path class="skin" d="M 435,173 L 374,173 C 374,183 386,188 408,188 L 408,199 L 435,173 Z" />
+    <!-- Hlava -->
+    <circle class="skin" cx="528" cy="145" r="42" />
+    <!-- Šaty a končetiny -->
+    <path class="woman" d="M 602,32 
+                           L 574,57 
+                           C 602,98 598,158 562,190 
+                           C 526,221 470,215 435,172 
+                           L 407,198 
+                           C 440,238 482,251 522,248 
+                           L 525,268 
+                           C 468,292 452,342 476,398 
+                           L 442,427 
+                           L 514,427 
+                           L 514,398 
+                           L 502,361 
+                           L 670,361 
+                           L 694,398 
+                           L 694,427 
+                           L 776,427 
+                           L 728,396 
+                           C 694,328 646,282 592,269 
+                           L 599,208 
+                           C 642,150 642,88 602,32 Z" />
+  </g>
+
+  <!-- TEXT LOGA -->
+  <text x="400" y="555" text-anchor="middle" class="logo-text-top">TANEČNÍ ŠKOLA</text>
+  <text x="400" y="675" text-anchor="middle" class="logo-text-bottom">CARMEN</text>
+</svg>

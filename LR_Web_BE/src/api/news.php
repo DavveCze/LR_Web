@@ -4,19 +4,10 @@ declare(strict_types=1);
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Credentials: true");
-header("Content-Type: application/json; charset=utf-8");
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
-
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../db.php';
+
+header("Content-Type: application/json; charset=utf-8");
 
 function requireAuth(): void {
     if (empty($_SESSION['authenticated'])) {
@@ -57,9 +48,23 @@ switch ($method) {
         echo json_encode(['status' => 'error', 'message' => 'Metoda nepovolena.']);
 }
 
+function hasExtendedColumns(PDO $pdo): bool {
+    try {
+        $pdo->query("SELECT image_url, created_at, updated_at FROM news LIMIT 0");
+        return true;
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
 function handleGet(PDO $pdo): void {
+    $extended = hasExtendedColumns($pdo);
+    $cols = $extended
+        ? 'id, headline, text, date, image_url, created_at, updated_at'
+        : 'id, headline, text, date, NULL AS image_url, date AS created_at, NULL AS updated_at';
+
     if (isset($_GET['id'])) {
-        $stmt = $pdo->prepare('SELECT id, headline, text, date FROM news WHERE id = :id');
+        $stmt = $pdo->prepare("SELECT {$cols} FROM news WHERE id = :id");
         $stmt->execute(['id' => (int)$_GET['id']]);
         $row = $stmt->fetch();
 
@@ -73,7 +78,14 @@ function handleGet(PDO $pdo): void {
         return;
     }
 
-    $stmt = $pdo->query('SELECT id, headline, text, date FROM news ORDER BY date DESC, id DESC');
+    if (isset($_GET['latest'])) {
+        $stmt = $pdo->query("SELECT {$cols} FROM news ORDER BY date DESC, id DESC LIMIT 1");
+        $row = $stmt->fetch();
+        echo json_encode(['status' => 'success', 'data' => $row ?: null], JSON_UNESCAPED_UNICODE);
+        return;
+    }
+
+    $stmt = $pdo->query("SELECT {$cols} FROM news ORDER BY date DESC, id DESC");
     $rows = $stmt->fetchAll();
 
     echo json_encode(['status' => 'success', 'data' => $rows], JSON_UNESCAPED_UNICODE);
@@ -91,18 +103,34 @@ function handlePost(PDO $pdo): void {
     $headline = trim((string)$data['headline']);
     $text = trim((string)$data['text']);
     $date = !empty($data['date']) ? trim((string)$data['date']) : date('Y-m-d');
+    $imageUrl = !empty($data['image_url']) ? trim((string)$data['image_url']) : null;
 
-    $stmt = $pdo->prepare('
-        INSERT INTO news (headline, text, date)
-        VALUES (:headline, :text, :date)
-        RETURNING id
-    ');
+    $extended = hasExtendedColumns($pdo);
 
-    $stmt->execute([
-        'headline' => $headline,
-        'text' => $text,
-        'date' => $date,
-    ]);
+    if ($extended) {
+        $stmt = $pdo->prepare('
+            INSERT INTO news (headline, text, date, image_url, created_at)
+            VALUES (:headline, :text, :date, :image_url, NOW())
+            RETURNING id
+        ');
+        $stmt->execute([
+            'headline' => $headline,
+            'text' => $text,
+            'date' => $date,
+            'image_url' => $imageUrl,
+        ]);
+    } else {
+        $stmt = $pdo->prepare('
+            INSERT INTO news (headline, text, date)
+            VALUES (:headline, :text, :date)
+            RETURNING id
+        ');
+        $stmt->execute([
+            'headline' => $headline,
+            'text' => $text,
+            'date' => $date,
+        ]);
+    }
 
     $id = $stmt->fetch()['id'] ?? null;
 
@@ -127,19 +155,36 @@ function handlePut(PDO $pdo): void {
     $headline = trim((string)$data['headline']);
     $text = trim((string)$data['text']);
     $date = !empty($data['date']) ? trim((string)$data['date']) : date('Y-m-d');
+    $imageUrl = array_key_exists('image_url', $data) && !empty($data['image_url']) ? trim((string)$data['image_url']) : null;
 
-    $stmt = $pdo->prepare('
-        UPDATE news
-        SET headline = :headline, text = :text, date = :date
-        WHERE id = :id
-    ');
+    $extended = hasExtendedColumns($pdo);
 
-    $stmt->execute([
-        'id' => $id,
-        'headline' => $headline,
-        'text' => $text,
-        'date' => $date,
-    ]);
+    if ($extended) {
+        $stmt = $pdo->prepare('
+            UPDATE news
+            SET headline = :headline, text = :text, date = :date, image_url = :image_url, updated_at = NOW()
+            WHERE id = :id
+        ');
+        $stmt->execute([
+            'id' => $id,
+            'headline' => $headline,
+            'text' => $text,
+            'date' => $date,
+            'image_url' => $imageUrl,
+        ]);
+    } else {
+        $stmt = $pdo->prepare('
+            UPDATE news
+            SET headline = :headline, text = :text, date = :date
+            WHERE id = :id
+        ');
+        $stmt->execute([
+            'id' => $id,
+            'headline' => $headline,
+            'text' => $text,
+            'date' => $date,
+        ]);
+    }
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404);

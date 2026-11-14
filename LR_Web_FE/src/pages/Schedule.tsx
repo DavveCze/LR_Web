@@ -1,24 +1,20 @@
 import React from "react";
 import { TrainingSchedule } from "../components/schedule/TrainingSchedule";
-import { PartnersSection } from "../components/ui/PartnersSection";
 import { EditableProvider, EditableText } from "../components/cms/EditableContent";
 import { LightButton } from "../components/ui/ButtonPrefab";
+import { PageHeader } from "../components/layout/PageHeader";
 
 export function TrainingPage() {
   return (
     <EditableProvider pageKey="schedule">
-      <main className="mx-auto max-w-7xl px-4 py-28 font-sans text-neutral-800">
-        <div className="mb-12 border-b-2 border-neutral-900 pb-4">
-          <h1 className="text-3xl font-bold uppercase tracking-wider text-neutral-900">
-            <EditableText path="header.title" fallback="ROZVRH TRÉNINKŮ 2024 / 2025" />
-          </h1>
-          <p className="mt-2 text-neutral-600">
-            <EditableText
-              path="header.subtitle"
-              fallback="Týdenní plán sálových tréninků, vedených lekcí a praktisů pro jednotlivé výkonnostní kategorie."
-            />
-          </p>
-        </div>
+      <PageHeader title="Rozvrh tréninků" />
+      <main className="mx-auto max-w-7xl px-4 py-10 font-sans text-neutral-800">
+        <p className="mb-8 text-neutral-600">
+          <EditableText
+            path="header.subtitle"
+            fallback="Týdenní plán sálových tréninků, vedených lekcí a praktisů pro jednotlivé výkonnostní kategorie."
+          />
+        </p>
 
         {/* GRAFICKÝ PLAKÁT ROZVRHU Z KLUBU */}
 
@@ -34,9 +30,6 @@ export function TrainingPage() {
           </div>
           <TrainingSchedule />
         </section>
-
-        {/* PARTNEŘI */}
-        <PartnersSection className="mt-16" />
       </main>
     </EditableProvider>
   );

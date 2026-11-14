@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { TrainerProps } from '../ui/TrainerProfiles';
 import { apiUrl } from '../../api/client';
+import { ImagePickerInput } from './ImagePickerInput';
 
 export const TrainerAdminPanel: React.FC = () => {
     const [trainers, setTrainers] = useState<TrainerProps[]>([]);
@@ -90,8 +91,14 @@ export const TrainerAdminPanel: React.FC = () => {
                                     <input type="text" required className="w-full border p-2 rounded" value={currentItem.full_name || ''} onChange={e => setCurrentItem({...currentItem, full_name: e.target.value})} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm mb-1">Název Fotky z Image Manageru</label>
-                                    <input type="text" placeholder="např. cep" className="w-full border p-2 rounded" value={currentItem.image_src || ''} onChange={e => setCurrentItem({...currentItem, image_src: e.target.value})} />
+                                    <ImagePickerInput
+                                        label="Fotografie trenéra"
+                                        value={currentItem.image_src || ''}
+                                        mode="baseName"
+                                        defaultFolder="treneri"
+                                        placeholder="např. cep"
+                                        onChange={(val) => setCurrentItem({ ...currentItem, image_src: val })}
+                                    />
                                 </div>
                             </div>
                             

@@ -1,14 +1,33 @@
-import type { FC } from "react";
-import { HelperImage, HelperBackgroundSection, useRefreshingAssets } from "../components/ui/HelperImage";
-import { Slideshow } from "../components/ui/Slideshow";
+import { useEffect, useState, type FC } from "react";
+import { HelperImage, HelperBackgroundSection } from "../components/ui/HelperImage";
+import { CompetitionResultsSlideshow } from "../components/ui/CompetitionResultsSlideshow";
 import { HomeButton } from "../components/ui/HomeButton";
+import { LightButton } from "../components/ui/ButtonPrefab";
+import { apiUrl } from "../api/client";
+
+interface LatestNewsItem {
+  id: number;
+  headline: string;
+  text: string;
+  date: string;
+  image_url?: string | null;
+}
 
 export const HomePage: FC = () => {
-  const aktualitySrc = useRefreshingAssets(["akademie", "sousko", "sousko1", "sousko2"], "home_imgs");
-  // Map resolved srcs to Slideshow's expected {src, alt} shape, filtering unresolved (null) entries
-  const aktualityImages = aktualitySrc
-    .map((s, i) => (s ? { src: s, alt: `Aktualita ${i + 1}` } : null))
-    .filter((v): v is { src: string; alt: string } => v !== null);
+  const [latestNews, setLatestNews] = useState<LatestNewsItem | null>(null);
+
+  useEffect(() => {
+    fetch(apiUrl("news.php?latest=1"))
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.status === "success" && data.data) {
+          setLatestNews(data.data as LatestNewsItem);
+        }
+      })
+      .catch(() => {
+        // Tichý fallback
+      });
+  }, []);
 
   return (
     <main className="bg-white font-sans text-neutral-800">
@@ -33,23 +52,46 @@ export const HomePage: FC = () => {
         <div className="border-t border-neutral-300" />
       </div>
 
-      {/* AKTUÁLNÍ DĚNÍ — text vlevo, slideshow vpravo (obrázky přes helper) */}
+      {/* AKTUÁLNÍ DĚNÍ — text vlevo, slideshow výsledků soutěží vpravo */}
       <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-16 md:grid-cols-2">
         <div>
           <h3 className="mb-4 flex items-center gap-2 text-xl font-semibold text-neutral-900">
             <span className="text-[#939393]">›</span> Aktuální dění
           </h3>
-          <p className="mb-6 text-neutral-700">
-            Snažíme se stránky udržovat, proto je dobré sledovat aktuality.
-          </p>
-          <HomeButton color="#393939" content="Aktuality" href="/aktuality" arrows={true} />
+
+          {/* SPECIÁLNÍ BOX K AKTUÁLNÍMU DĚNÍ (nejnovější titulek s proklikem) */}
+          {latestNews ? (
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-5 shadow-sm transition hover:border-neutral-400">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-neutral-500 mb-2">
+                <span className="bg-neutral-200 text-neutral-800 px-2 py-0.5 rounded text-[11px] font-bold">
+                  Nejnovější aktualita
+                </span>
+                <time>{new Date(latestNews.date).toLocaleDateString("cs-CZ")}</time>
+              </div>
+              <a
+                href={`/aktuality#article-${latestNews.id}`}
+                className="group block"
+              >
+                <h4 className="text-lg md:text-xl font-bold text-neutral-900 group-hover:text-blue-700 transition-colors line-clamp-2">
+                  {latestNews.headline}
+                </h4>
+                <p className="mt-2 text-sm text-neutral-600 line-clamp-2 leading-relaxed font-light">
+                  {latestNews.text}
+                </p>
+                <span className="mt-3 inline-flex items-center text-xs font-semibold text-neutral-900 group-hover:underline">
+                  Zobrazit podrobnější informace ›
+                </span>
+              </a>
+            </div>
+          ) : (
+            <p className="text-neutral-700">
+              Snažíme se stránky udržovat, proto je dobré sledovat aktuality.
+            </p>
+          )}
         </div>
 
-        {aktualityImages.length > 0 ? (
-          <Slideshow images={aktualityImages} className="aspect-[8/5] w-full" />
-        ) : (
-          <div className="aspect-[8/5] w-full bg-neutral-200 animate-pulse" aria-hidden="true" />
-        )}
+        {/* Výsledky soutěží za poslední víkend ve slideshow */}
+        <CompetitionResultsSlideshow className="w-full" />
       </section>
 
       {/* PROFESIONÁLNÍ TANEČNÍ KLUB — parallax pruh přes helper */}
@@ -67,7 +109,10 @@ export const HomePage: FC = () => {
             <strong>mistr České republiky</strong> v latinskoamerických tancích. Připoj se a{" "}
             <strong>tancuj s námi</strong>!
           </p>
-          <HomeButton color="#ffffff" content="O klubu" href="/o-nas" arrows={false} />
+          {/* Pravidlo: není vedlejší obrázek k nasměrování -> použít LightButton místo HomeButton */}
+          <LightButton href="/o-nas" className="px-6 py-3 font-medium">
+            O klubu
+          </LightButton>
         </div>
       </HelperBackgroundSection>
 
@@ -76,7 +121,7 @@ export const HomePage: FC = () => {
         <div className="border-t border-neutral-300" />
       </div>
 
-      {/* OD MALÝCH AŽ PO TY VELKÉ — obrázek přes helper vlevo, text vpravo */}
+      {/* OD MALÝCH AŽ PO TY VELKÉ — obrázek vlevo, text vpravo (HomeButton směruje vlevo do obrázku) */}
       <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-20 md:grid-cols-2">
         <HelperImage
           baseName="junior"
@@ -91,7 +136,7 @@ export const HomePage: FC = () => {
             <strong>školy</strong>, ale také <strong>dospělí tanečníci</strong> různého věku. Neváhejte a{" "}
             <strong>začněte také</strong>!
           </p>
-          <HomeButton color="#393939" content="Více o klubu" href="/kurzy" arrows={false} />
+          <HomeButton color="#393939" content="Více o klubu" href="/kurzy" direction="left" />
         </div>
       </section>
 
@@ -100,7 +145,7 @@ export const HomePage: FC = () => {
         <div className="border-t border-neutral-300" />
       </div>
 
-      {/* TANEČNÍ SOUSTŘEDĚNÍ — text vlevo, obrázek přes helper vpravo */}
+      {/* TANEČNÍ SOUSTŘEDĚNÍ — text vlevo, obrázek vpravo (HomeButton směruje vpravo do obrázku) */}
       <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-20 md:grid-cols-2">
         <div>
           <h2 className="mb-4 text-2xl font-semibold text-neutral-900">Taneční soustředění</h2>
@@ -110,7 +155,7 @@ export const HomePage: FC = () => {
             <strong>fyzický trénink</strong>, přípravu na velké akce jako MČR a podobně. Soustředění jsou určena pro{" "}
             <strong>všechny věkové kategorie</strong>.
           </p>
-          <HomeButton color="#393939" content="Kalendář akcí" href="/kalendar" arrows={true} />
+          <HomeButton color="#393939" content="Kalendář akcí" href="/kalendar" direction="right" />
         </div>
         <HelperImage
           baseName="hotel"

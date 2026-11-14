@@ -8,6 +8,7 @@ import { RegistrationManager } from '../components/admin/RegistrationManager';
 import { TrainingScheduleAdmin } from '../components/admin/TrainingScheduleAdmin';
 import { DanceAdminPanel } from '../components/admin/DanceAdminPanel';
 import { CarmenAdminPanel } from '../components/admin/CarmenAdminPanel';
+import { NewsManager } from '../components/admin/NewsManager';
 import { PartnersSection } from '../components/ui/PartnersSection';
 
 export const DashboardPage: React.FC = () => {  
@@ -44,6 +45,10 @@ export const DashboardPage: React.FC = () => {
                 <div className="mb-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">Registrace</h2>
                     <RegistrationManager />
+                </div>
+
+                <div className="mb-8">
+                    <NewsManager />
                 </div>
 
                 <div className="mb-8">

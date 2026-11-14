@@ -47,6 +47,7 @@ function autoCompressPlugin(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   server: {
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

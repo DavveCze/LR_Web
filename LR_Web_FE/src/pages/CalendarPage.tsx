@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { PartnersSection } from "../components/ui/PartnersSection";
 import { EditableProvider, EditableText } from "../components/cms/EditableContent";
+import { PageHeader } from "../components/layout/PageHeader";
 
 interface EventItem {
   id: number;
@@ -65,18 +65,15 @@ const typeLabels: Record<EventItem["type"], { label: string; color: string }> = 
 export const CalendarPage: React.FC = () => {
   return (
     <EditableProvider pageKey="calendar">
-      <main className="mx-auto max-w-5xl px-6 py-28 font-sans text-neutral-800">
-        <div className="mb-12 border-b-2 border-neutral-900 pb-4">
-          <h1 className="text-3xl font-bold uppercase tracking-wider text-neutral-900">
-            <EditableText path="header.title" fallback="KALENDÁŘ AKCÍ & SOUTĚŽÍ" />
-          </h1>
-          <p className="mt-2 text-neutral-600">
+      <div>
+        <PageHeader title="Kalendář akcí" />
+        <main className="mx-auto max-w-5xl px-6 py-10 font-sans text-neutral-800">
+          <p className="mb-8 text-neutral-600">
             <EditableText
               path="header.subtitle"
               fallback="Termíny nadcházejících soutěží, seminářů, soustředění a táborů pro aktuální sezónu."
             />
           </p>
-        </div>
 
         {/* FEATURED SOUSTŘEDĚNÍ V BESKYDECH */}
         <div className="mb-12 overflow-hidden border border-neutral-200 bg-white grid md:grid-cols-2 shadow-xs">
@@ -169,9 +166,9 @@ export const CalendarPage: React.FC = () => {
           </div>
         </div>
 
-        {/* PARTNEŘI */}
-        <PartnersSection className="mt-16" />
+
       </main>
+      </div>
     </EditableProvider>
   );
 };

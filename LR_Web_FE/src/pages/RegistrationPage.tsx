@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { apiUrl } from "../api/client";
+import { PageHeader } from "../components/layout/PageHeader";
 import {
   RegistrationCategory,
   type RegistrationItem,
 } from "../components/ui/RegistrationCategory";
-import { PartnersSection } from "../components/ui/PartnersSection";
 
 type ApiCategory = {
   headline: string;
@@ -72,35 +72,34 @@ export const RegistrationPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="mx-auto min-h-[50vh] max-w-5xl px-6 pt-36 pb-24 text-center text-neutral-500 font-sans">
-        Načítám vypsané přihlášky…
-      </main>
+      <div>
+        <PageHeader title="Přihláška" />
+        <main className="mx-auto min-h-[40vh] max-w-5xl px-6 py-12 text-center text-neutral-500 font-sans">
+          Načítám vypsané přihlášky…
+        </main>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="mx-auto min-h-[50vh] max-w-5xl px-6 pt-36 pb-24 text-center text-red-700 font-sans">
-        {error}
-      </main>
+      <div>
+        <PageHeader title="Přihláška" />
+        <main className="mx-auto min-h-[40vh] max-w-5xl px-6 py-12 text-center text-red-700 font-sans">
+          {error}
+        </main>
+      </div>
     );
   }
 
   return (
-    <main className="w-full bg-white font-sans text-neutral-800 pt-36 pb-24">
-      {/* HORNÍ DĚLÍCÍ ČÁRA */}
-      <div className="mx-auto max-w-5xl px-6">
-        <div className="border-t border-neutral-300" />
-      </div>
-
-      <div className="mx-auto max-w-5xl px-6 py-14">
-        {/* TITULEK STRÁNKY */}
-        <h1 className="mb-4 text-2xl font-bold uppercase tracking-wider text-neutral-900 border-b-2 border-neutral-900 pb-2 inline-block">
-          PŘIHLÁŠKY DO KURZŮ A TÁBORŮ
-        </h1>
-        <p className="mb-12 text-lg text-neutral-600 font-light leading-relaxed">
-          Vyberte si níže vypsaný kurz nebo tábor. Přihlášení probíhá výhradně přes náš oficiální informační systém.
-        </p>
+    <div>
+      <PageHeader title="Přihláška" />
+      <main className="w-full bg-white font-sans text-neutral-800 pt-6 pb-24">
+        <div className="mx-auto max-w-5xl px-6 py-6">
+          <p className="mb-12 text-lg text-neutral-600 font-light leading-relaxed">
+            Vyberte si níže vypsaný kurz nebo tábor. Přihlášení probíhá výhradně přes náš oficiální informační systém.
+          </p>
 
         {/* SEZNAM KATEGORIÍ A PŘIHLÁŠEK PŘES IS.POHODLNE.INFO */}
         {categories.length === 0 ? (
@@ -117,9 +116,7 @@ export const RegistrationPage: React.FC = () => {
           ))
         )}
       </div>
-
-      {/* PARTNEŘI */}
-      <PartnersSection className="mt-16" />
     </main>
-  );
+  </div>
+);
 };

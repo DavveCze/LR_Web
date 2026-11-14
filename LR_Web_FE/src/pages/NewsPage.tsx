@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { apiUrl } from "../api/client";
-import { PartnersSection } from "../components/ui/PartnersSection";
+import { PageHeader } from "../components/layout/PageHeader";
 
-interface NewsItem {
+export interface NewsItem {
   id: number;
   headline: string;
   text: string;
   date: string;
+  image_url?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 function formatDate(dateString: string): string {
@@ -24,6 +28,7 @@ function formatDate(dateString: string): string {
 export const NewsPage: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     fetch(apiUrl("news.php"))
@@ -37,22 +42,28 @@ export const NewsPage: React.FC = () => {
         }
       })
       .catch(() => {
-        // Fallback / tichý fallback pokud news.php ještě není na backendu nasazen
         setNews([]);
       })
       .finally(() => setLoading(false));
   }, []);
 
+  // Automatické odscrollování na konkrétní článek dle kotvy v URL (#article-123)
+  useEffect(() => {
+    if (!loading && location.hash) {
+      const el = document.querySelector(location.hash);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, [loading, location.hash]);
+
   return (
-    <main className="mx-auto max-w-5xl px-6 py-28 font-sans text-neutral-800">
-      <div className="mb-12 border-b-2 border-neutral-900 pb-4">
-        <h1 className="text-3xl font-bold uppercase tracking-wider text-neutral-900">
-          Aktuality & Oznámení
-        </h1>
-        <p className="mt-2 text-neutral-600">
+    <div>
+      <PageHeader title="Aktuality" />
+      <main className="mx-auto max-w-5xl px-6 py-10 font-sans text-neutral-800">
+        <p className="mb-8 text-neutral-600">
           Sledujte nejnovější informace z dění v našem tanečním klubu a taneční škole.
         </p>
-      </div>
 
       {loading ? (
         <div className="space-y-6">
@@ -61,16 +72,38 @@ export const NewsPage: React.FC = () => {
           ))}
         </div>
       ) : news.length > 0 ? (
-        <div className="space-y-8 divide-y divide-neutral-200">
+        <div className="space-y-12 divide-y divide-neutral-200">
           {news.map((item) => (
-            <article key={item.id} className="pt-6 first:pt-0">
-              <time className="text-xs uppercase tracking-widest text-neutral-500 font-semibold">
-                {formatDate(item.date)}
-              </time>
-              <h2 className="mt-1 text-2xl font-semibold text-neutral-900">
+            <article
+              key={item.id}
+              id={`article-${item.id}`}
+              className="pt-10 first:pt-0 scroll-mt-36"
+            >
+              <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-neutral-500 font-semibold">
+                <time>{formatDate(item.date)}</time>
+                {item.updated_at && (
+                  <span className="text-neutral-400 font-normal">
+                    (aktualizováno: {formatDate(item.updated_at)})
+                  </span>
+                )}
+              </div>
+
+              <h2 className="mt-2 text-2xl md:text-3xl font-bold text-neutral-900 tracking-tight">
                 {item.headline}
               </h2>
-              <div className="mt-3 text-neutral-700 leading-relaxed whitespace-pre-line text-base">
+
+              {item.image_url && (
+                <div className="mt-4 mb-6 overflow-hidden rounded border border-neutral-200 aspect-[16/9] max-h-[460px] bg-neutral-100">
+                  <img
+                    src={item.image_url}
+                    alt={item.headline}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.01]"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+
+              <div className="mt-4 text-neutral-700 leading-relaxed whitespace-pre-line text-base md:text-lg font-light">
                 {item.text}
               </div>
             </article>
@@ -86,9 +119,7 @@ export const NewsPage: React.FC = () => {
           </p>
         </div>
       )}
-
-      {/* PARTNEŘI */}
-      <PartnersSection className="mt-16" />
     </main>
-  );
+  </div>
+);
 };

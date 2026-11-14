@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiUrl } from "../../api/client";
+import { ImagePickerInput } from "../admin/ImagePickerInput";
 
 export interface PartnerLogo {
   id: string;
@@ -307,12 +308,12 @@ export const PartnersSection: React.FC<PartnersSectionProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-neutral-600">Cesta k logu (obrázek)</label>
-                      <input
-                        type="text"
+                      <ImagePickerInput
+                        label="Logo partnera"
                         value={logo.logo}
-                        onChange={(e) => updateLogo(idx, { logo: e.target.value })}
-                        className="mt-1 w-full border border-neutral-300 px-2 py-1.5 text-xs"
+                        onChange={(val) => updateLogo(idx, { logo: val })}
+                        defaultFolder="partners"
+                        placeholder="/assets/imgs/partners/..."
                       />
                     </div>
                     <div>
@@ -386,12 +387,12 @@ export const PartnersSection: React.FC<PartnersSectionProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-neutral-600">Cesta k logu instituce</label>
-                      <input
-                        type="text"
+                      <ImagePickerInput
+                        label="Logo instituce"
                         value={notice.logo || ""}
-                        onChange={(e) => updateNotice(idx, { logo: e.target.value })}
-                        className="mt-1 w-full border border-neutral-300 px-2 py-1.5 text-xs"
+                        onChange={(val) => updateNotice(idx, { logo: val })}
+                        defaultFolder="partners"
+                        placeholder="/assets/imgs/partners/..."
                       />
                     </div>
                   </div>
