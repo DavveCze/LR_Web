@@ -111,6 +111,9 @@ export default defineSchema({
   // Harmonogram tréninků a sálů
   training_schedules: defineTable({
     locationName: v.optional(v.string()),
+    location_name: v.optional(v.string()),
+    locationId: v.optional(v.union(v.number(), v.string())),
+    location_id: v.optional(v.union(v.number(), v.string())),
     dayOfWeek: v.optional(v.string()),
     day_of_week: v.optional(v.string()),
     timeRange: v.optional(v.string()),

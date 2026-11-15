@@ -28,6 +28,8 @@ export type TrainingBlock = {
   trainer_id?: number | string | null;
   trainer_name?: string | null;
   group_type?: string | null;
+  location_id?: number | string | null;
+  location_name?: string | null;
 };
 
 const blockClasses: Record<BlockType, string> = {
@@ -464,6 +466,17 @@ export function TrainingSchedule({ exportRef }: { exportRef?: React.RefObject<HT
                             </span>
                           );
                         })()}
+
+                        {block.location_name && (
+                          <span
+                            className={`mt-0.5 text-neutral-600 font-normal tracking-tight truncate max-w-full block opacity-90 ${
+                              layout.isStacked ? "text-[9px]" : "text-[10px]"
+                            }`}
+                            title={block.location_name}
+                          >
+                            📍 {block.location_name}
+                          </span>
+                        )}
                       </article>
                     );
                   })}

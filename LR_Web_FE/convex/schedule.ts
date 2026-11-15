@@ -11,6 +11,9 @@ export const listSchedule = query({
 export const createScheduleItem = mutation({
   args: {
     locationName: v.optional(v.string()),
+    location_name: v.optional(v.string()),
+    locationId: v.optional(v.union(v.number(), v.string())),
+    location_id: v.optional(v.union(v.number(), v.string())),
     dayOfWeek: v.optional(v.string()),
     day_of_week: v.optional(v.string()),
     timeRange: v.optional(v.string()),
@@ -38,6 +41,9 @@ export const updateScheduleItem = mutation({
   args: {
     id: v.id("training_schedules"),
     locationName: v.optional(v.string()),
+    location_name: v.optional(v.string()),
+    locationId: v.optional(v.union(v.number(), v.string())),
+    location_id: v.optional(v.union(v.number(), v.string())),
     dayOfWeek: v.optional(v.string()),
     day_of_week: v.optional(v.string()),
     timeRange: v.optional(v.string()),

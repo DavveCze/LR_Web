@@ -368,6 +368,8 @@ export async function getScheduleList<T = any>(): Promise<T[]> {
           trainer_id: item.trainer_id ?? null,
           trainer_name: item.trainer_name ?? item.trainerName ?? null,
           group_type: item.group_type ?? null,
+          location_id: item.location_id ?? item.locationId ?? null,
+          location_name: item.location_name ?? item.locationName ?? null,
         })) as unknown as T[];
       }
     } catch (err) {

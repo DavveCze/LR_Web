@@ -136,6 +136,8 @@ if ($method === 'GET') {
             ts.display_order,
             ts.trainer_id,
             ts.group_type,
+            ts.location_id,
+            ts.location_name,
             t.full_name AS trainer_name
         FROM training_schedule ts
         LEFT JOIN trainers t ON ts.trainer_id = t.id
@@ -230,6 +232,11 @@ $trainerId = ($rawTrainerId !== null && $rawTrainerId !== '' && (int) $rawTraine
 $groupType = trim((string) ($data['group_type'] ?? ''));
 $groupTypeVal = $groupType !== '' ? $groupType : null;
 
+$rawLocationId = $data['location_id'] ?? $data['locationId'] ?? null;
+$locationId = ($rawLocationId !== null && $rawLocationId !== '') ? (string) $rawLocationId : null;
+$locationName = trim((string) ($data['location_name'] ?? $data['locationName'] ?? ''));
+$locationNameVal = $locationName !== '' ? $locationName : null;
+
 // Pokud není zadán subtitle manuálně, sestavíme ho pro zpětnou kompatibilitu z trenéra a skupiny
 if ($subtitle === '') {
     $trainerName = '';
@@ -268,6 +275,8 @@ if ($method === 'POST') {
             subtitle,
             trainer_id,
             group_type,
+            location_id,
+            location_name,
             block_type,
             is_active,
             display_order
@@ -279,6 +288,8 @@ if ($method === 'POST') {
             :subtitle,
             :trainer_id,
             :group_type,
+            :location_id,
+            :location_name,
             :block_type,
             :is_active,
             :display_order
@@ -306,6 +317,18 @@ if ($method === 'POST') {
         $statement->bindValue(':group_type', null, PDO::PARAM_NULL);
     } else {
         $statement->bindValue(':group_type', $groupTypeVal, PDO::PARAM_STR);
+    }
+
+    if ($locationId === null) {
+        $statement->bindValue(':location_id', null, PDO::PARAM_NULL);
+    } else {
+        $statement->bindValue(':location_id', $locationId, PDO::PARAM_STR);
+    }
+
+    if ($locationNameVal === null) {
+        $statement->bindValue(':location_name', null, PDO::PARAM_NULL);
+    } else {
+        $statement->bindValue(':location_name', $locationNameVal, PDO::PARAM_STR);
     }
 
     $statement->bindValue(':block_type', $type, PDO::PARAM_STR);
@@ -347,6 +370,8 @@ $statement = $pdo->prepare(
         subtitle = :subtitle,
         trainer_id = :trainer_id,
         group_type = :group_type,
+        location_id = :location_id,
+        location_name = :location_name,
         block_type = :block_type,
         is_active = :is_active,
         display_order = :display_order,
@@ -376,6 +401,18 @@ if ($groupTypeVal === null) {
     $statement->bindValue(':group_type', null, PDO::PARAM_NULL);
 } else {
     $statement->bindValue(':group_type', $groupTypeVal, PDO::PARAM_STR);
+}
+
+if ($locationId === null) {
+    $statement->bindValue(':location_id', null, PDO::PARAM_NULL);
+} else {
+    $statement->bindValue(':location_id', $locationId, PDO::PARAM_STR);
+}
+
+if ($locationNameVal === null) {
+    $statement->bindValue(':location_name', null, PDO::PARAM_NULL);
+} else {
+    $statement->bindValue(':location_name', $locationNameVal, PDO::PARAM_STR);
 }
 
 $statement->bindValue(':block_type', $type, PDO::PARAM_STR);

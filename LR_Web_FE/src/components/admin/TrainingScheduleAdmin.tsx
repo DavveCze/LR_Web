@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import type { TrainingBlock } from "../schedule/TrainingSchedule";
 import type { TrainerProps } from "../ui/TrainerProfiles";
-import { apiUrl, getTrainersList, safeJson, api } from "../../api/client";
+import { apiUrl, getTrainersList, getPageContent, safeJson, api } from "../../api/client";
+import { DEFAULT_TRAINING_LOCATIONS, TrainingLocation } from "./TrainingLocationsAdmin";
 import { convex } from "../../convex";
 
 const API_URL = apiUrl("training-schedule.php");
@@ -13,6 +14,7 @@ type FormState = {
   end_time: string;
   title: string;
   trainer_id: number | string | null;
+  location_id: string | null;
   group_type: string;
   subtitle: string;
   block_type: TrainingBlock["block_type"];
@@ -26,6 +28,7 @@ const EMPTY_FORM: FormState = {
   end_time: "17:00",
   title: "",
   trainer_id: null,
+  location_id: null,
   group_type: "",
   subtitle: "",
   block_type: "guided",
@@ -63,6 +66,7 @@ const GROUP_TYPE_PRESETS = [
 export function TrainingScheduleAdmin() {
   const [items, setItems] = useState<TrainingBlock[]>([]);
   const [trainers, setTrainers] = useState<TrainerProps[]>([]);
+  const [locations, setLocations] = useState<TrainingLocation[]>([]);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -87,6 +91,8 @@ export function TrainingScheduleAdmin() {
               display_order: item.display_order ?? item.order ?? 0,
               trainer_id: item.trainer_id ?? null,
               trainer_name: item.trainer_name ?? item.trainerName ?? null,
+              location_id: item.location_id ?? item.locationId ?? null,
+              location_name: item.location_name ?? item.locationName ?? null,
               group_type: item.group_type ?? "",
             }))
           );
@@ -134,9 +140,23 @@ export function TrainingScheduleAdmin() {
     }
   };
 
+  const loadLocations = async () => {
+    try {
+      const data = await getPageContent<TrainingLocation[]>("training_locations");
+      if (Array.isArray(data) && data.length > 0) {
+        setLocations(data);
+      } else {
+        setLocations(DEFAULT_TRAINING_LOCATIONS);
+      }
+    } catch {
+      setLocations(DEFAULT_TRAINING_LOCATIONS);
+    }
+  };
+
   useEffect(() => {
     loadItems();
     loadTrainers();
+    loadLocations();
   }, []);
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -151,6 +171,9 @@ export function TrainingScheduleAdmin() {
       end_time: item.end_time,
       title: item.title,
       trainer_id: item.trainer_id ?? null,
+      location_id: item.location_id != null ? String(item.location_id) : (
+        item.location_name ? (locations.find(l => l.name === item.location_name)?.id ?? null) : null
+      ),
       group_type: item.group_type ?? "",
       subtitle: item.subtitle ?? "",
       block_type: item.block_type,
@@ -220,6 +243,10 @@ export function TrainingScheduleAdmin() {
       (t) => String(t.id) === String(form.trainer_id)
     );
 
+    const selectedLocation = locations.find(
+      (l) => String(l.id) === String(form.location_id)
+    );
+
     if (convex) {
       try {
         const payload = {
@@ -233,6 +260,10 @@ export function TrainingScheduleAdmin() {
           trainer_id: form.trainer_id != null ? form.trainer_id : undefined,
           trainer_name: selectedTrainer ? selectedTrainer.full_name : undefined,
           trainerName: selectedTrainer ? selectedTrainer.full_name : undefined,
+          location_id: form.location_id || undefined,
+          locationId: form.location_id || undefined,
+          location_name: selectedLocation ? selectedLocation.name : undefined,
+          locationName: selectedLocation ? selectedLocation.name : undefined,
           group_type: form.group_type || undefined,
           subtitle: form.subtitle || undefined,
           block_type: form.block_type,
@@ -266,7 +297,11 @@ export function TrainingScheduleAdmin() {
         method: form.id ? "PUT" : "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          trainer_name: selectedTrainer ? selectedTrainer.full_name : null,
+          location_name: selectedLocation ? selectedLocation.name : null,
+        }),
       });
 
       const payload = await safeJson(response);
@@ -420,6 +455,27 @@ export function TrainingScheduleAdmin() {
         </label>
 
         <label className="text-sm font-medium text-neutral-700">
+          Místo tréninku
+          <select
+            value={form.location_id ?? ""}
+            onChange={(event) =>
+              setField(
+                "location_id",
+                event.target.value || null,
+              )
+            }
+            className="mt-1 w-full rounded border border-neutral-300 bg-white p-2"
+          >
+            <option value="">— Bez určení místa —</option>
+            {locations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {loc.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="text-sm font-medium text-neutral-700 md:col-span-2">
           Skupina / typ (LAT/STT)
           <input
             list="group-type-options"
@@ -487,6 +543,7 @@ export function TrainingScheduleAdmin() {
               <th className="px-3 py-3">Čas</th>
               <th className="px-3 py-3">Hlavní text</th>
               <th className="px-3 py-3">Trenér</th>
+              <th className="px-3 py-3">Místo</th>
               <th className="px-3 py-3">Skupina / typ</th>
               <th className="px-3 py-3">Typ bloku</th>
               <th className="px-3 py-3">Stav</th>
@@ -517,6 +574,15 @@ export function TrainingScheduleAdmin() {
                       <span className="inline-flex items-center gap-1.5 font-medium text-neutral-800">
                         <span className="h-2 w-2 rounded-full bg-amber-500" />
                         {item.trainer_name}
+                      </span>
+                    ) : (
+                      <span className="text-neutral-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3">
+                    {item.location_name ? (
+                      <span className="inline-flex items-center gap-1 font-medium text-neutral-800 text-xs">
+                        📍 {item.location_name}
                       </span>
                     ) : (
                       <span className="text-neutral-400">—</span>
@@ -568,7 +634,7 @@ export function TrainingScheduleAdmin() {
             {items.length === 0 && (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={9}
                   className="px-3 py-8 text-center text-neutral-500"
                 >
                   Zatím nejsou vytvořené žádné bloky rozvrhu.
