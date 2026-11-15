@@ -110,6 +110,7 @@ export default defineSchema({
     subtitle: v.optional(v.string()),
     url: v.string(),
     category: v.optional(v.string()),
+    cost: v.optional(v.string()),
     isActive: v.boolean(),
     order: v.optional(v.number()),
   }),

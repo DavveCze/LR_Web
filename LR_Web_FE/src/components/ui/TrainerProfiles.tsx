@@ -5,7 +5,7 @@ import { getTrainersList } from "../../api/client";
 const path = "treneri"; // složka s obrázky trenérů
 
 export type TrainerProps = {
-  id?: number;
+  id?: number | string;
   full_name: string;
   title?: string;
   info?: string;

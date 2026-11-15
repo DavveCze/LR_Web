@@ -370,3 +370,117 @@ export async function getScheduleList<T = any>(): Promise<T[]> {
   }
   return [];
 }
+
+export interface AdminRegistrationPayload {
+  id?: number | string;
+  category: string;
+  headline: string;
+  content?: string | null;
+  link?: string | null;
+  cost?: string | null;
+  isActive: boolean;
+}
+
+/**
+ * Získání přihlášek (Convex / fallback REST)
+ */
+export async function getRegistrationsList<T = any>(): Promise<T[]> {
+  if (convex) {
+    try {
+      const items = await (convex as any).query(api.registrations.listRegistrations, {});
+      if (items && Array.isArray(items) && items.length > 0) {
+        return items as T[];
+      }
+    } catch (err) {
+      console.warn("[Convex] getRegistrationsList failed:", err);
+    }
+  }
+
+  try {
+    const res = await fetch(apiUrl("prihlasky.php"));
+    if (res.ok) {
+      const json = await safeJson<any>(res);
+      if (json && json.status === "success" && Array.isArray(json.data)) {
+        return json.data as T[];
+      }
+      if (Array.isArray(json)) return json as T[];
+    }
+  } catch {
+    // ignore
+  }
+
+  return [];
+}
+
+/**
+ * Uložení (vytvoření / aktualizace) přihlášky (Convex / fallback REST)
+ */
+export async function saveRegistrationItem(payload: AdminRegistrationPayload): Promise<void> {
+  if (convex) {
+    try {
+      if (payload.id && typeof payload.id === "string") {
+        await (convex as any).mutation(api.registrations.updateRegistration, {
+          id: payload.id,
+          title: payload.headline,
+          subtitle: payload.content || undefined,
+          url: payload.link || "#",
+          category: payload.category,
+          cost: payload.cost || undefined,
+          isActive: payload.isActive,
+        });
+        return;
+      }
+
+      await (convex as any).mutation(api.registrations.createRegistration, {
+        title: payload.headline,
+        subtitle: payload.content || undefined,
+        url: payload.link || "#",
+        category: payload.category,
+        cost: payload.cost || undefined,
+        isActive: payload.isActive,
+      });
+      return;
+    } catch (err) {
+      console.warn("[Convex] saveRegistrationItem failed, trying REST:", err);
+    }
+  }
+
+  const method = payload.id ? "PUT" : "POST";
+  const res = await fetch(apiUrl("prihlasky.php"), {
+    method,
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const json = await safeJson<{ status?: string; message?: string }>(res);
+  if (!res.ok || (json && json.status === "error")) {
+    throw new Error(json?.message || `Chyba při ukládání přihlášky (HTTP ${res.status}).`);
+  }
+}
+
+/**
+ * Smazání přihlášky (Convex / fallback REST)
+ */
+export async function deleteRegistrationItem(id: number | string): Promise<void> {
+  if (convex && typeof id === "string") {
+    try {
+      await (convex as any).mutation(api.registrations.deleteRegistration, { id });
+      return;
+    } catch (err) {
+      console.warn("[Convex] deleteRegistrationItem failed, trying REST:", err);
+    }
+  }
+
+  const res = await fetch(apiUrl("prihlasky.php"), {
+    method: "DELETE",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+
+  const json = await safeJson<{ status?: string; message?: string }>(res);
+  if (!res.ok || (json && json.status === "error")) {
+    throw new Error(json?.message || `Chyba při mazání přihlášky (HTTP ${res.status}).`);
+  }
+}

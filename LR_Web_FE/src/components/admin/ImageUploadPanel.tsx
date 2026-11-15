@@ -99,6 +99,11 @@ export const ImageUploadPanel: React.FC = () => {
         body: formData,
       });
 
+      const isJson = (response.headers.get('content-type') || '').includes('application/json');
+      if (!isJson) {
+        throw new Error(`Server vrátil neočekávanou odpověď (kód ${response.status}).`);
+      }
+
       const data: UploadResponse = await response.json();
 
       if (!response.ok || data.status !== 'success') {

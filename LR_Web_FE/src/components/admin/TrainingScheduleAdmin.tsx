@@ -151,7 +151,10 @@ export function TrainingScheduleAdmin() {
     const isJson = (response.headers.get("content-type") || "").includes(
       "application/json",
     );
-    if (!response.ok || !isJson) return;
+    if (!response.ok || !isJson) {
+      setMessage(`Chyba při mazání bloku (kód ${response.status}).`);
+      return;
+    }
 
     const payload = await response.json();
 
@@ -183,7 +186,10 @@ export function TrainingScheduleAdmin() {
     const isJson = (response.headers.get("content-type") || "").includes(
       "application/json",
     );
-    if (!response.ok || !isJson) return;
+    if (!response.ok || !isJson) {
+      setMessage(`Chyba při mazání bloku (kód ${response.status}).`);
+      return;
+    }
 
     const payload = await response.json();
 

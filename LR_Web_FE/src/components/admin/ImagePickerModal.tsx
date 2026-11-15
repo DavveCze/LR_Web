@@ -38,7 +38,11 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     let isMounted = true;
 
     fetch(apiUrl('images.php'))
-      .then((res) => (res.ok ? res.json() : null))
+      .then(async (res) => {
+        const isJson = (res.headers.get('content-type') || '').includes('application/json');
+        if (res.ok && isJson) return await res.json();
+        return null;
+      })
       .then((data) => {
         if (isMounted && data?.status === 'success' && Array.isArray(data.data)) {
           setAssets(data.data);

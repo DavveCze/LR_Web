@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { apiUrl } from '../../api/client';
+import { apiUrl, api } from '../../api/client';
+import { convex } from '../../convex';
 import { ImagePickerInput } from './ImagePickerInput';
 import { CzechDatePicker } from '../ui/CzechDatePicker';
 
 export interface NewsArticle {
-    id: number;
+    id: number | string;
     headline: string;
     text: string;
     date: string;
@@ -28,11 +29,31 @@ export const NewsManager: React.FC = () => {
 
     const fetchArticles = async () => {
         try {
+            if (convex) {
+                try {
+                    const list = await (convex as any).query(api.news.listAllNews, {});
+                    if (Array.isArray(list) && list.length > 0) {
+                        setArticles(list.map((n: any) => ({
+                            id: n._id || n.id,
+                            headline: n.title || n.headline,
+                            text: n.content || n.text || n.perex,
+                            date: n.publishedAt || n.date,
+                            image_url: n.image || n.image_url,
+                        })));
+                        return;
+                    }
+                } catch {
+                    // fallback
+                }
+            }
+
             const res = await fetch(apiUrl('news.php'));
-            if (!res.ok) throw new Error('Nepodařilo se načíst články');
-            const data = await res.json();
-            if (data.status === 'success' && Array.isArray(data.data)) {
-                setArticles(data.data);
+            const isJson = (res.headers.get('content-type') || '').includes('application/json');
+            if (res.ok && isJson) {
+                const data = await res.json();
+                if (data.status === 'success' && Array.isArray(data.data)) {
+                    setArticles(data.data);
+                }
             }
         } catch {
             setArticles([]);
@@ -65,10 +86,21 @@ export const NewsManager: React.FC = () => {
         setIsEditing(true);
     };
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: number | string) => {
         if (!confirm('Opravdu chcete tuto aktualitu / článek smazat?')) return;
 
         try {
+            if (convex && typeof id === 'string') {
+                try {
+                    await (convex as any).mutation(api.news.deleteNews, { id });
+                    showStatus('Aktualita byla úspěšně smazána.');
+                    await fetchArticles();
+                    return;
+                } catch (cErr) {
+                    console.warn('[Convex] Chyba mazání aktuality, zkouším REST:', cErr);
+                }
+            }
+
             const res = await fetch(apiUrl('news.php'), {
                 method: 'DELETE',
                 credentials: 'include',
@@ -76,11 +108,14 @@ export const NewsManager: React.FC = () => {
                 body: JSON.stringify({ id }),
             });
 
-            if (res.ok) {
+            const isJson = (res.headers.get('content-type') || '').includes('application/json');
+            const data = isJson ? await res.json().catch(() => null) : null;
+
+            if (res.ok && (!data || data.status === 'success')) {
                 showStatus('Aktualita byla úspěšně smazána.');
                 fetchArticles();
             } else {
-                alert('Chyba při mazání.');
+                alert(data?.message || `Chyba při mazání (HTTP ${res.status}).`);
             }
         } catch {
             alert('Chyba spojení.');
@@ -98,6 +133,37 @@ export const NewsManager: React.FC = () => {
         const isUpdate = Boolean(currentArticle.id);
         const method = isUpdate ? 'PUT' : 'POST';
 
+        if (convex) {
+            try {
+                if (currentArticle.id && typeof currentArticle.id === 'string') {
+                    await (convex as any).mutation(api.news.updateNews, {
+                        id: currentArticle.id,
+                        title: currentArticle.headline.trim(),
+                        perex: currentArticle.text.trim().slice(0, 150),
+                        content: currentArticle.text.trim(),
+                        image: currentArticle.image_url || undefined,
+                        publishedAt: currentArticle.date,
+                        isPublished: true,
+                    });
+                } else {
+                    await (convex as any).mutation(api.news.createNews, {
+                        title: currentArticle.headline.trim(),
+                        perex: currentArticle.text.trim().slice(0, 150),
+                        content: currentArticle.text.trim(),
+                        image: currentArticle.image_url || undefined,
+                        publishedAt: currentArticle.date,
+                        isPublished: true,
+                    });
+                }
+                setIsEditing(false);
+                showStatus(isUpdate ? 'Článek byl upraven.' : 'Článek byl vytvořen.');
+                await fetchArticles();
+                return;
+            } catch (cErr) {
+                console.warn('[Convex] Chyba ukládání aktuality, zkouším REST:', cErr);
+            }
+        }
+
         try {
             const res = await fetch(apiUrl('news.php'), {
                 method,
@@ -106,16 +172,18 @@ export const NewsManager: React.FC = () => {
                 body: JSON.stringify(currentArticle),
             });
 
-            if (res.ok) {
+            const isJson = (res.headers.get('content-type') || '').includes('application/json');
+            const data = isJson ? await res.json().catch(() => null) : null;
+
+            if (res.ok && (!data || data.status === 'success')) {
                 setIsEditing(false);
                 showStatus(isUpdate ? 'Článek byl upraven.' : 'Článek byl vytvořen.');
                 fetchArticles();
             } else {
-                const errData = await res.json().catch(() => null);
                 if (res.status === 401) {
                     alert('Byl jste odhlášen. Přihlaste se prosím znovu.');
                 } else {
-                    alert(errData?.message || 'Chyba při ukládání článku.');
+                    alert(data?.message || `Chyba při ukládání článku (HTTP ${res.status}).`);
                 }
             }
         } catch (err) {

@@ -15,10 +15,18 @@ export const ImageManager: React.FC = () => {
   const fetchAssets = async () => {
     try {
       const res = await fetch(apiUrl('images.php'));
-      const data = await res.json();
-      if (data.status === 'success') setAssets(data.data);
+      const isJson = (res.headers.get('content-type') || '').includes('application/json');
+      if (res.ok && isJson) {
+        const data = await res.json();
+        if (data.status === 'success' && Array.isArray(data.data)) {
+          setAssets(data.data);
+        }
+      } else {
+        setAssets([]);
+      }
     } catch (err) {
-      console.error(err);
+      console.warn('[ImageManager] Chyba načtení obrázků:', err);
+      setAssets([]);
     } finally {
       setLoading(false);
     }
