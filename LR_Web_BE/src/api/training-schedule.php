@@ -125,34 +125,38 @@ if ($method === 'GET') {
 
     $sql = '
         SELECT
-            id,
-            day_of_week,
-            to_char(start_time, \'HH24:MI\') AS start_time,
-            to_char(end_time, \'HH24:MI\') AS end_time,
-            title,
-            subtitle,
-            block_type,
-            is_active,
-            display_order
-        FROM training_schedule
+            ts.id,
+            ts.day_of_week,
+            to_char(ts.start_time, \'HH24:MI\') AS start_time,
+            to_char(ts.end_time, \'HH24:MI\') AS end_time,
+            ts.title,
+            ts.subtitle,
+            ts.block_type,
+            ts.is_active,
+            ts.display_order,
+            ts.trainer_id,
+            ts.group_type,
+            t.full_name AS trainer_name
+        FROM training_schedule ts
+        LEFT JOIN trainers t ON ts.trainer_id = t.id
     ';
 
     if (!$adminView) {
-        $sql .= ' WHERE is_active = TRUE ';
+        $sql .= ' WHERE ts.is_active = TRUE ';
     }
 
     $sql .= '
         ORDER BY
-            CASE day_of_week
+            CASE ts.day_of_week
                 WHEN \'monday\' THEN 1
                 WHEN \'tuesday\' THEN 2
                 WHEN \'wednesday\' THEN 3
                 WHEN \'thursday\' THEN 4
                 WHEN \'friday\' THEN 5
             END,
-            start_time,
-            display_order,
-            id
+            ts.start_time,
+            ts.display_order,
+            ts.id
     ';
 
     $rows = $pdo->query($sql)->fetchAll();
@@ -220,22 +224,39 @@ $title = trim((string) ($data['title'] ?? ''));
 $subtitle = trim((string) ($data['subtitle'] ?? ''));
 $type = validateType((string) ($data['block_type'] ?? 'free'));
 
+$rawTrainerId = $data['trainer_id'] ?? null;
+$trainerId = ($rawTrainerId !== null && $rawTrainerId !== '' && (int) $rawTrainerId > 0) ? (int) $rawTrainerId : null;
+
+$groupType = trim((string) ($data['group_type'] ?? ''));
+$groupTypeVal = $groupType !== '' ? $groupType : null;
+
+// Pokud není zadán subtitle manuálně, sestavíme ho pro zpětnou kompatibilitu z trenéra a skupiny
+if ($subtitle === '') {
+    $trainerName = '';
+    if ($trainerId !== null) {
+        $stmtT = $pdo->prepare('SELECT full_name FROM trainers WHERE id = :tid');
+        $stmtT->execute([':tid' => $trainerId]);
+        $tRow = $stmtT->fetch();
+        if ($tRow && !empty($tRow['full_name'])) {
+            $parts = explode(' ', trim($tRow['full_name']));
+            $trainerName = $parts[0];
+        }
+    }
+    if ($trainerName !== '' && $groupTypeVal !== null) {
+        $subtitle = $trainerName . ' - ' . $groupTypeVal;
+    } elseif ($trainerName !== '') {
+        $subtitle = $trainerName;
+    } elseif ($groupTypeVal !== null) {
+        $subtitle = $groupTypeVal;
+    }
+}
+
 if ($title === '') {
     respond(400, [
         'status' => 'error',
         'message' => 'Název tréninku je povinný.',
     ]);
 }
-
-$params = [
-    ':day_of_week' => $day,
-    ':start_time' => $startTime,
-    ':end_time' => $endTime,
-    ':title' => $title,
-    ':subtitle' => $subtitle !== '' ? $subtitle : null,
-    ':block_type' => $type,
-    ':display_order' => (int) ($data['display_order'] ?? 0),
-];
 
 if ($method === 'POST') {
     $statement = $pdo->prepare(
@@ -245,6 +266,8 @@ if ($method === 'POST') {
             end_time,
             title,
             subtitle,
+            trainer_id,
+            group_type,
             block_type,
             is_active,
             display_order
@@ -254,6 +277,8 @@ if ($method === 'POST') {
             :end_time,
             :title,
             :subtitle,
+            :trainer_id,
+            :group_type,
             :block_type,
             :is_active,
             :display_order
@@ -269,6 +294,18 @@ if ($method === 'POST') {
         $statement->bindValue(':subtitle', null, PDO::PARAM_NULL);
     } else {
         $statement->bindValue(':subtitle', $subtitle, PDO::PARAM_STR);
+    }
+
+    if ($trainerId === null) {
+        $statement->bindValue(':trainer_id', null, PDO::PARAM_NULL);
+    } else {
+        $statement->bindValue(':trainer_id', $trainerId, PDO::PARAM_INT);
+    }
+
+    if ($groupTypeVal === null) {
+        $statement->bindValue(':group_type', null, PDO::PARAM_NULL);
+    } else {
+        $statement->bindValue(':group_type', $groupTypeVal, PDO::PARAM_STR);
     }
 
     $statement->bindValue(':block_type', $type, PDO::PARAM_STR);
@@ -308,6 +345,8 @@ $statement = $pdo->prepare(
         end_time = :end_time,
         title = :title,
         subtitle = :subtitle,
+        trainer_id = :trainer_id,
+        group_type = :group_type,
         block_type = :block_type,
         is_active = :is_active,
         display_order = :display_order,
@@ -325,6 +364,18 @@ if ($subtitle === '') {
     $statement->bindValue(':subtitle', null, PDO::PARAM_NULL);
 } else {
     $statement->bindValue(':subtitle', $subtitle, PDO::PARAM_STR);
+}
+
+if ($trainerId === null) {
+    $statement->bindValue(':trainer_id', null, PDO::PARAM_NULL);
+} else {
+    $statement->bindValue(':trainer_id', $trainerId, PDO::PARAM_INT);
+}
+
+if ($groupTypeVal === null) {
+    $statement->bindValue(':group_type', null, PDO::PARAM_NULL);
+} else {
+    $statement->bindValue(':group_type', $groupTypeVal, PDO::PARAM_STR);
 }
 
 $statement->bindValue(':block_type', $type, PDO::PARAM_STR);

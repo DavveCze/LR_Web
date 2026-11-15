@@ -25,6 +25,9 @@ export type TrainingBlock = {
   block_type: BlockType;
   is_active: boolean;
   display_order: number;
+  trainer_id?: number | null;
+  trainer_name?: string | null;
+  group_type?: string | null;
 };
 
 const blockClasses: Record<BlockType, string> = {
@@ -76,6 +79,14 @@ const TRAINER_FAMILIES: ColorFamily[] = [
  */
 function extractTrainerAndCategory(block: TrainingBlock): { trainer: string; category: string } | null {
   if (block.block_type !== "guided") return null;
+
+  if (block.trainer_name) {
+    const firstName = block.trainer_name.trim().split(/\s+/)[0];
+    const trainer = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+    const category = (block.group_type ?? "").trim();
+    return { trainer, category };
+  }
+
   const text = (block.subtitle ?? "").trim();
   if (!text) return null;
 
@@ -433,17 +444,26 @@ export function TrainingSchedule({ exportRef }: { exportRef?: React.RefObject<HT
                           {block.title}
                         </span>
 
-                        {block.subtitle && (
-                          <span
-                            className={`mt-0.5 font-semibold leading-tight whitespace-pre-line ${
-                              layout.isStacked ? "text-[11px]" : "text-xs"
-                            }`}
-                          >
-                            {block.subtitle.startsWith("(") || block.subtitle.includes("\n") || block.subtitle.startsWith("od ")
-                              ? block.subtitle
-                              : `(${block.subtitle})`}
-                          </span>
-                        )}
+                        {(() => {
+                          const trainerFirst = block.trainer_name ? block.trainer_name.trim().split(/\s+/)[0] : "";
+                          const label = (trainerFirst || block.group_type)
+                            ? [trainerFirst, block.group_type].filter(Boolean).join(" - ")
+                            : (block.subtitle ?? "");
+
+                          if (!label) return null;
+
+                          return (
+                            <span
+                              className={`mt-0.5 font-semibold leading-tight whitespace-pre-line ${
+                                layout.isStacked ? "text-[11px]" : "text-xs"
+                              }`}
+                            >
+                              {label.startsWith("(") || label.includes("\n") || label.startsWith("od ")
+                                ? label
+                                : `(${label})`}
+                            </span>
+                          );
+                        })()}
                       </article>
                     );
                   })}
