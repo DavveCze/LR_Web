@@ -62,6 +62,8 @@ export const TrainerAdminPanel: React.FC = () => {
                             role: currentItem.title || 'Trenér',
                             bio: currentItem.info || '',
                             image: currentItem.image_src || undefined,
+                            category_lat: Boolean(currentItem.category_lat),
+                            category_stt: Boolean(currentItem.category_stt),
                             order: currentItem.display_order || 0,
                             isActive: currentItem.is_active !== false,
                         });
@@ -71,6 +73,8 @@ export const TrainerAdminPanel: React.FC = () => {
                             role: currentItem.title || 'Trenér',
                             bio: currentItem.info || '',
                             image: currentItem.image_src || undefined,
+                            category_lat: Boolean(currentItem.category_lat),
+                            category_stt: Boolean(currentItem.category_stt),
                             order: currentItem.display_order || 0,
                             isActive: currentItem.is_active !== false,
                         });

@@ -29,7 +29,7 @@ export interface ApiResponse<T = unknown> {
 /**
  * Bezpečné parsování JSON z HTTP odpovědi (zabraňuje pádu na HTML doctype)
  */
-async function safeJson<T = any>(res: Response): Promise<T | null> {
+export async function safeJson<T = any>(res: Response): Promise<T | null> {
   const contentType = res.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
     return null;
@@ -352,7 +352,24 @@ export async function getScheduleList<T = any>(): Promise<T[]> {
   if (convex) {
     try {
       const items = await (convex as any).query(api.schedule.listSchedule, {});
-      if (items && Array.isArray(items)) return items as T[];
+      if (items && Array.isArray(items) && items.length > 0) {
+        return items.map((item: any) => ({
+          id: item._id || item.id,
+          day_of_week: item.day_of_week || item.dayOfWeek || "monday",
+          start_time:
+            item.start_time || item.timeRange?.split("-")[0]?.trim() || "16:15",
+          end_time:
+            item.end_time || item.timeRange?.split("-")[1]?.trim() || "17:00",
+          title: item.title || item.groupName || "",
+          subtitle: item.subtitle || null,
+          block_type: item.block_type || "guided",
+          is_active: item.is_active ?? item.isActive ?? true,
+          display_order: item.display_order ?? item.order ?? 0,
+          trainer_id: item.trainer_id ?? null,
+          trainer_name: item.trainer_name ?? item.trainerName ?? null,
+          group_type: item.group_type ?? null,
+        })) as unknown as T[];
+      }
     } catch (err) {
       console.warn("[Convex] getScheduleList failed:", err);
     }

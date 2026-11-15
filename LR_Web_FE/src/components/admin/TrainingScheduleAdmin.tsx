@@ -1,18 +1,18 @@
 import { FormEvent, useEffect, useState } from "react";
 import type { TrainingBlock } from "../schedule/TrainingSchedule";
 import type { TrainerProps } from "../ui/TrainerProfiles";
-import { apiUrl } from "../../api/client";
+import { apiUrl, getTrainersList, safeJson, api } from "../../api/client";
+import { convex } from "../../convex";
 
 const API_URL = apiUrl("training-schedule.php");
-const TRAINERS_API_URL = apiUrl("trainers.php");
 
 type FormState = {
-  id?: number;
+  id?: number | string;
   day_of_week: TrainingBlock["day_of_week"];
   start_time: string;
   end_time: string;
   title: string;
-  trainer_id: number | null;
+  trainer_id: number | string | null;
   group_type: string;
   subtitle: string;
   block_type: TrainingBlock["block_type"];
@@ -68,19 +68,42 @@ export function TrainingScheduleAdmin() {
   const [message, setMessage] = useState("");
 
   const loadItems = async () => {
+    if (convex) {
+      try {
+        const cItems = await (convex as any).query(api.schedule.listSchedule, {});
+        if (Array.isArray(cItems) && cItems.length > 0) {
+          setItems(
+            cItems.map((item: any) => ({
+              id: item._id || item.id,
+              day_of_week: item.day_of_week || item.dayOfWeek || "monday",
+              start_time:
+                item.start_time || item.timeRange?.split("-")[0]?.trim() || "16:15",
+              end_time:
+                item.end_time || item.timeRange?.split("-")[1]?.trim() || "17:00",
+              title: item.title || item.groupName || "",
+              subtitle: item.subtitle || "",
+              block_type: item.block_type || "guided",
+              is_active: item.is_active ?? item.isActive ?? true,
+              display_order: item.display_order ?? item.order ?? 0,
+              trainer_id: item.trainer_id ?? null,
+              trainer_name: item.trainer_name ?? item.trainerName ?? null,
+              group_type: item.group_type ?? "",
+            }))
+          );
+          return;
+        }
+      } catch (cErr) {
+        console.warn("[Convex] listSchedule failed, trying REST:", cErr);
+      }
+    }
+
     try {
       const response = await fetch(`${API_URL}?admin=1`, {
         credentials: "include",
       });
 
-      const isJson = (response.headers.get("content-type") || "").includes(
-        "application/json",
-      );
-      if (!response.ok || !isJson) return;
-
-      const payload = await response.json();
-
-      if (payload.status === "success") {
+      const payload = await safeJson(response);
+      if (payload && payload.status === "success" && Array.isArray(payload.data)) {
         setItems(payload.data);
       }
     } catch {
@@ -90,19 +113,21 @@ export function TrainingScheduleAdmin() {
 
   const loadTrainers = async () => {
     try {
-      const response = await fetch(TRAINERS_API_URL, {
-        credentials: "include",
-      });
-
-      const isJson = (response.headers.get("content-type") || "").includes(
-        "application/json",
-      );
-      if (!response.ok || !isJson) return;
-
-      const payload = await response.json();
-
-      if (payload.status === "success" && Array.isArray(payload.data)) {
-        setTrainers(payload.data);
+      const list = await getTrainersList();
+      if (Array.isArray(list) && list.length > 0) {
+        setTrainers(
+          list.map((t: any) => ({
+            id: t._id || t.id,
+            full_name: t.name || t.full_name || "",
+            title: t.role || t.title || "",
+            info: t.bio || t.info || "",
+            image_src: t.image || t.image_src || "",
+            category_lat: Boolean(t.category_lat),
+            category_stt: Boolean(t.category_stt),
+            is_active: t.isActive ?? t.is_active ?? true,
+            display_order: t.order ?? t.display_order ?? 0,
+          }))
+        );
       }
     } catch {
       // Ignorovat síťové výpadky
@@ -136,38 +161,53 @@ export function TrainingScheduleAdmin() {
     setMessage("");
   };
 
-  const deleteItem = async (id: number) => {
+  const deleteItem = async (id: number | string) => {
     if (!window.confirm("Opravdu chceš tento blok z rozvrhu smazat?")) {
       return;
     }
 
-    const response = await fetch(API_URL, {
-      method: "DELETE",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-
-    const isJson = (response.headers.get("content-type") || "").includes(
-      "application/json",
-    );
-    if (!response.ok || !isJson) {
-      setMessage(`Chyba při mazání bloku (kód ${response.status}).`);
-      return;
+    if (convex && typeof id === "string") {
+      try {
+        await (convex as any).mutation(api.schedule.deleteScheduleItem, { id });
+        setMessage("Blok byl úspěšně smazán.");
+        await loadItems();
+        if (form.id === id) {
+          setForm(EMPTY_FORM);
+        }
+        return;
+      } catch (cErr) {
+        console.warn("[Convex] deleteScheduleItem failed, trying REST:", cErr);
+      }
     }
 
-    const payload = await response.json();
+    try {
+      const response = await fetch(API_URL, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
 
-    if (!response.ok) {
-      setMessage(payload.message ?? "Mazání selhalo.");
-      return;
-    }
+      const payload = await safeJson(response);
 
-    setMessage(payload.message);
-    await loadItems();
+      if (!response.ok || !payload) {
+        setMessage(`Chyba při mazání bloku (kód ${response.status}).`);
+        return;
+      }
 
-    if (form.id === id) {
-      setForm(EMPTY_FORM);
+      if (payload.status !== "success") {
+        setMessage(payload.message ?? "Mazání selhalo.");
+        return;
+      }
+
+      setMessage(payload.message || "Blok byl smazán.");
+      await loadItems();
+
+      if (form.id === id) {
+        setForm(EMPTY_FORM);
+      }
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Chyba při mazání bloku.");
     }
   };
 
@@ -176,33 +216,80 @@ export function TrainingScheduleAdmin() {
     setSaving(true);
     setMessage("");
 
-    const response = await fetch(API_URL, {
-      method: form.id ? "PUT" : "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-
-    const isJson = (response.headers.get("content-type") || "").includes(
-      "application/json",
+    const selectedTrainer = trainers.find(
+      (t) => String(t.id) === String(form.trainer_id)
     );
-    if (!response.ok || !isJson) {
-      setMessage(`Chyba při mazání bloku (kód ${response.status}).`);
-      return;
+
+    if (convex) {
+      try {
+        const payload = {
+          day_of_week: form.day_of_week,
+          dayOfWeek: form.day_of_week,
+          start_time: form.start_time,
+          end_time: form.end_time,
+          timeRange: `${form.start_time} - ${form.end_time}`,
+          title: form.title,
+          groupName: form.title,
+          trainer_id: form.trainer_id != null ? form.trainer_id : undefined,
+          trainer_name: selectedTrainer ? selectedTrainer.full_name : undefined,
+          trainerName: selectedTrainer ? selectedTrainer.full_name : undefined,
+          group_type: form.group_type || undefined,
+          subtitle: form.subtitle || undefined,
+          block_type: form.block_type,
+          is_active: form.is_active,
+          isActive: form.is_active,
+          display_order: form.display_order,
+          order: form.display_order,
+        };
+
+        if (form.id && typeof form.id === "string") {
+          await (convex as any).mutation(api.schedule.updateScheduleItem, {
+            id: form.id,
+            ...payload,
+          });
+        } else {
+          await (convex as any).mutation(api.schedule.createScheduleItem, payload);
+        }
+
+        setSaving(false);
+        setMessage("Blok rozvrhu byl úspěšně uložen.");
+        setForm(EMPTY_FORM);
+        await loadItems();
+        return;
+      } catch (cErr) {
+        console.warn("[Convex] submitSchedule failed, falling back to REST:", cErr);
+      }
     }
 
-    const payload = await response.json();
+    try {
+      const response = await fetch(API_URL, {
+        method: form.id ? "PUT" : "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    setSaving(false);
+      const payload = await safeJson(response);
 
-    if (!response.ok || payload.status !== "success") {
-      setMessage(payload.message ?? "Uložení selhalo.");
-      return;
+      setSaving(false);
+
+      if (!response.ok || !payload) {
+        setMessage(`Chyba při ukládání bloku (kód ${response.status}).`);
+        return;
+      }
+
+      if (payload.status !== "success") {
+        setMessage(payload.message ?? "Uložení selhalo.");
+        return;
+      }
+
+      setMessage(payload.message || "Blok byl úspěšně uložen.");
+      setForm(EMPTY_FORM);
+      await loadItems();
+    } catch (err) {
+      setSaving(false);
+      setMessage(err instanceof Error ? err.message : "Chyba při ukládání bloku.");
     }
-
-    setMessage(payload.message);
-    setForm(EMPTY_FORM);
-    await loadItems();
   };
 
   return (
@@ -309,11 +396,11 @@ export function TrainingScheduleAdmin() {
         <label className="text-sm font-medium text-neutral-700">
           Trenér
           <select
-            value={form.trainer_id ?? ""}
+            value={form.trainer_id != null ? String(form.trainer_id) : ""}
             onChange={(event) =>
               setField(
                 "trainer_id",
-                event.target.value ? Number(event.target.value) : null,
+                event.target.value || null,
               )
             }
             className="mt-1 w-full rounded border border-neutral-300 bg-white p-2"
@@ -324,7 +411,7 @@ export function TrainingScheduleAdmin() {
                 .filter(Boolean)
                 .join("/");
               return (
-                <option key={t.id} value={t.id}>
+                <option key={String(t.id)} value={String(t.id)}>
                   {t.full_name} {cats ? `(${cats})` : ""}
                 </option>
               );

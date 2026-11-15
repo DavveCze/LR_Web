@@ -16,7 +16,7 @@ const TOTAL_MINUTES = DAY_END_MINUTES - DAY_START_MINUTES;
 type BlockType = "free" | "guided" | "practice" | "fitness";
 
 export type TrainingBlock = {
-  id: number;
+  id: number | string;
   day_of_week: (typeof DAYS)[number]["key"];
   start_time: string;
   end_time: string;
@@ -25,7 +25,7 @@ export type TrainingBlock = {
   block_type: BlockType;
   is_active: boolean;
   display_order: number;
-  trainer_id?: number | null;
+  trainer_id?: number | string | null;
   trainer_name?: string | null;
   group_type?: string | null;
 };
@@ -148,7 +148,7 @@ interface LayoutItem extends TrainingBlock {
  * neměl nesoulad výšek a zachoval čisté vertikální zarovnání i dělicí čáry.
  */
 function computeDayLayout(dayBlocks: TrainingBlock[]): {
-  layouts: Map<number, BlockLayout>;
+  layouts: Map<number | string, BlockLayout>;
   maxLanes: number;
 } {
   if (!dayBlocks.length) {
@@ -168,7 +168,7 @@ function computeDayLayout(dayBlocks: TrainingBlock[]): {
       a.start - b.start ||
       b.end - a.end ||
       a.display_order - b.display_order ||
-      a.id - b.id,
+      String(a.id).localeCompare(String(b.id)),
   );
 
   // Rozdělení do souvislých komponent (shluků), kde se bloky přímo či řetězově překrývají
@@ -193,7 +193,7 @@ function computeDayLayout(dayBlocks: TrainingBlock[]): {
     clusters.push(currCluster);
   }
 
-  const layouts = new Map<number, BlockLayout>();
+  const layouts = new Map<number | string, BlockLayout>();
   let dayMaxLanes = 1;
 
   for (const cluster of clusters) {
@@ -323,7 +323,7 @@ export function TrainingSchedule({ exportRef }: { exportRef?: React.RefObject<HT
     const result: Record<
       string,
       {
-        layouts: Map<number, BlockLayout>;
+        layouts: Map<number | string, BlockLayout>;
         maxLanes: number;
       }
     > = {};

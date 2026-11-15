@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { apiUrl } from "../../api/client";
+import { apiUrl, safeJson, api } from "../../api/client";
+import { convex } from "../../convex";
 import { CzechDatePicker } from "../ui/CzechDatePicker";
 
 const API_URL = apiUrl('dancers.php');
@@ -361,20 +362,48 @@ export function DanceAdminPanel() {
     setCstsNotice("");
 
     try {
-      const res = await fetch(`${API_URL}?action=csts_preview&idt=${idtVal}`, {
-        credentials: "include",
-      });
-      const payload = await res.json();
-      if (!res.ok || payload.status !== "success") {
-        throw new Error(
-          getErrorMessage(
-            payload,
-            "Tanečník s tímto IDT nebyl v ČSTS nalezen nebo má ČSTS dočasný výpadek.",
-          ),
-        );
+      let athleteData: any = null;
+
+      // 1. Zkusíme Convex action fetchAthletePreview
+      if (convex) {
+        try {
+          const cstsRes = await (convex as any).action(
+            api.csts.fetchAthletePreview,
+            { idt: idtVal }
+          );
+          if (cstsRes && cstsRes.status === "success" && cstsRes.data) {
+            athleteData = cstsRes.data;
+          } else if (cstsRes && cstsRes.status === "error") {
+            throw new Error(
+              cstsRes.message || "Tanečník s tímto IDT nebyl v ČSTS nalezen."
+            );
+          }
+        } catch (cErr: any) {
+          console.warn("[Convex] fetchAthletePreview failed, trying REST:", cErr);
+          if (cErr?.message && !cErr.message.includes("Could not find")) {
+            throw cErr;
+          }
+        }
       }
 
-      const a = payload.data;
+      // 2. Pokud nemáme data z Convexu, zkusíme bezpečně REST API
+      if (!athleteData) {
+        const res = await fetch(`${API_URL}?action=csts_preview&idt=${idtVal}`, {
+          credentials: "include",
+        });
+        const payload = await safeJson(res);
+        if (!res.ok || !payload || payload.status !== "success") {
+          throw new Error(
+            getErrorMessage(
+              payload,
+              "Tanečník s tímto IDT nebyl v ČSTS nalezen nebo má ČSTS dočasný výpadek."
+            )
+          );
+        }
+        athleteData = payload.data;
+      }
+
+      const a = athleteData;
       setDancerForm((prev) => ({
         ...prev,
         name: a.name || prev.name,
