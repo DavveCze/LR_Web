@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { EditableProvider, EditableText } from "../components/cms/EditableContent";
 import { PageHeader } from "../components/layout/PageHeader";
 import { HomeButton } from "../components/ui/HomeButton";
@@ -466,7 +465,7 @@ export const CalendarPage: React.FC = () => {
                 return (
                   <article
                     key={event.id}
-                    className="grid gap-4 border border-neutral-200 bg-white p-6 md:grid-cols-[160px_1fr_auto] md:items-center shadow-xs"
+                    className="grid gap-4 border border-neutral-200 bg-white p-6 md:grid-cols-[160px_1fr] md:items-center shadow-xs"
                   >
                     <div>
                       <span className="text-sm font-bold text-neutral-900 block">{event.date}</span>
@@ -510,15 +509,6 @@ export const CalendarPage: React.FC = () => {
                       {event.note && (
                         <p className="mt-1 text-xs text-neutral-500 italic">{event.note}</p>
                       )}
-                    </div>
-
-                    <div>
-                      <Link
-                        to={`/kontakt?subject=${encodeURIComponent(event.title)}`}
-                        className="inline-block border border-neutral-800 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-neutral-900 hover:bg-neutral-900 hover:text-white transition-colors"
-                      >
-                        Dotaz k akci ›
-                      </Link>
                     </div>
                   </article>
                 );
