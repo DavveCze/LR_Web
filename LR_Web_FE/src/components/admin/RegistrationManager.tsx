@@ -18,9 +18,15 @@ export const RegistrationManager: React.FC = () => {
 
     const fetchRegistrations = () => {
         fetch(apiUrl('prihlasky.php'))
-            .then((res) => res.json())
+            .then(async (res) => {
+                const isJson = (res.headers.get('content-type') || '').includes('application/json');
+                if (res.ok && isJson) {
+                    return await res.json();
+                }
+                return null;
+            })
             .then((data) => {
-                if (data.status === 'success') {
+                if (data && data.status === 'success' && Array.isArray(data.data)) {
                     const flatItems: AdminRegistrationItem[] = [];
 
                     data.data.forEach((cat: { headline: string; components: RegistrationItem[] }) => {
@@ -31,6 +37,9 @@ export const RegistrationManager: React.FC = () => {
 
                     setItems(flatItems);
                 }
+            })
+            .catch(() => {
+                // Tichý fallback
             });
     };
 

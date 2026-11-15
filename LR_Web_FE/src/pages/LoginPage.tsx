@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiUrl } from '../api/client';
-
-interface LoginResponse {
-  success?: boolean;
-  status?: string;
-  message?: string;
-  token?: string;
-}
+import { loginUser } from '../api/client';
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000;
@@ -110,27 +103,20 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(apiUrl('login.php'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include',
-      });
+      const result = await loginUser(email, password);
 
-      const data: LoginResponse = await response.json();
-
-      if (data.status === 'success') {
-        setSuccess('Login successful! Redirecting...');
+      if (result.success) {
+        setSuccess('Přihlášení úspěšné! Přesměrovávám do administrace...');
         localStorage.removeItem('loginAttempts');
         localStorage.removeItem('lastAttemptTime');
         localStorage.removeItem('lockoutEndTime');
-        setTimeout(() => navigate('/admin/dashboard'), 1500);
+        setTimeout(() => navigate('/admin/dashboard'), 800);
       } else {
-        setError(data.message || 'Login failed. Please try again.');
+        setError(result.message || 'Neplatné přihlašovací jméno nebo heslo.');
         registerFailedAttempt();
       }
     } catch {
-      setError('An error occurred. Please try again later.');
+      setError('Nastala neočekávaná chyba při přihlašování.');
     } finally {
       setLoading(false);
     }

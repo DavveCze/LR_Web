@@ -12,8 +12,13 @@ export const TrainerAdminPanel: React.FC = () => {
 
     const fetchTrainers = () => {
         fetch(apiUrl('trainers.php'))
-            .then(res => res.json())
-            .then(data => { if (data.status === 'success') setTrainers(data.data); });
+            .then(async (res) => {
+                const isJson = (res.headers.get('content-type') || '').includes('application/json');
+                if (res.ok && isJson) return await res.json();
+                return null;
+            })
+            .then(data => { if (data && data.status === 'success') setTrainers(data.data); })
+            .catch(() => {});
     };
 
     useEffect(() => { fetchTrainers(); }, []);

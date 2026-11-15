@@ -20,9 +20,14 @@ export const ProtectedRoute: React.FC = () => {
     fetch(apiUrl('check-auth.php'), {
       credentials: 'include',
     })
-      .then(res => res.json())
-      .then(data => {
-        setIsAuthenticated(data.status === 'success');
+      .then(async (res) => {
+        const isJson = (res.headers.get('content-type') || '').includes('application/json');
+        if (res.ok && isJson) {
+          const data = await res.json();
+          setIsAuthenticated(data && data.status === 'success');
+        } else {
+          setIsAuthenticated(false);
+        }
       })
       .catch(() => setIsAuthenticated(false));
   }, [isAuthenticated]);

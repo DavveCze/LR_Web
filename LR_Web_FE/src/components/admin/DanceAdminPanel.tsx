@@ -262,6 +262,12 @@ export function DanceAdminPanel() {
         cache: "no-store",
       });
 
+      const isJson = (response.headers.get("content-type") || "").includes("application/json");
+      if (!response.ok || !isJson) {
+        setData({ pairs: [], dancers: [], results: [] });
+        return;
+      }
+
       const payload = await response.json();
 
       if (!response.ok || payload.status !== "success") {

@@ -46,6 +46,9 @@ export function TrainingScheduleAdmin() {
       credentials: "include",
     });
 
+    const isJson = (response.headers.get("content-type") || "").includes("application/json");
+    if (!response.ok || !isJson) return;
+
     const payload = await response.json();
 
     if (payload.status === "success") {
@@ -89,6 +92,9 @@ const editItem = (item: TrainingBlock) => {
       body: JSON.stringify({ id }),
     });
 
+    const isJson = (response.headers.get("content-type") || "").includes("application/json");
+    if (!response.ok || !isJson) return;
+
     const payload = await response.json();
 
     if (!response.ok) {
@@ -115,6 +121,9 @@ const editItem = (item: TrainingBlock) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
+
+    const isJson = (response.headers.get("content-type") || "").includes("application/json");
+    if (!response.ok || !isJson) return;
 
     const payload = await response.json();
 

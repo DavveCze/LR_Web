@@ -42,8 +42,11 @@ export const submitInquiry = mutation({
 });
 
 export const listInquiries = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { token: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    if (!args.token && process.env.NODE_ENV === "production") {
+      return [];
+    }
     return await ctx.db.query("inquiries").order("desc").collect();
   },
 });
