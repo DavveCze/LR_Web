@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@auth/core": "^0.41.3",
-    "@convex-dev/auth": "^2.0.0",
+    "@convex-dev/auth": "^0.0.98",
     "convex": "^1.50.0",
     "html-to-image": "^1.11.13",
     "react": "^19.2.7",
