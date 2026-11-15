@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { apiUrl } from "../../api/client";
+import { getPageContent, savePageContent } from "../../api/client";
 
 export interface EditableContextType {
   content: Record<string, unknown>;
@@ -71,8 +71,7 @@ export const EditableProvider: React.FC<EditableProviderProps> = ({
   // Load any stored content from API if available
   useEffect(() => {
     let isMounted = true;
-    fetch(apiUrl(`content.php?page=${encodeURIComponent(pageKey)}`))
-      .then((res) => (res.ok ? res.json() : null))
+    getPageContent<Record<string, unknown>>(pageKey)
       .then((data) => {
         if (isMounted && data && typeof data === "object") {
           setContent((prev) => ({ ...prev, ...data }));
@@ -97,13 +96,9 @@ export const EditableProvider: React.FC<EditableProviderProps> = ({
   const saveChanges = async (): Promise<boolean> => {
     setIsSaving(true);
     try {
-      const res = await fetch(apiUrl("content.php"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ page: pageKey, content }),
-      });
+      await savePageContent(pageKey, content);
       setIsSaving(false);
-      return res.ok;
+      return true;
     } catch {
       setIsSaving(false);
       return false;

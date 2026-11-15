@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { apiUrl } from "../../api/client";
+import { getPageContent, savePageContent } from "../../api/client";
 import { ImagePickerInput } from "../admin/ImagePickerInput";
 
 export interface PartnerLogo {
@@ -78,11 +78,10 @@ export const PartnersSection: React.FC<PartnersSectionProps> = ({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  // Načtení uložených partnerů z backendu
+  // Načtení uložených partnerů z backendu (Convex / fallback)
   useEffect(() => {
     let isMounted = true;
-    fetch(apiUrl("content.php?page=partners"))
-      .then((res) => (res.ok ? res.json() : null))
+    getPageContent<PartnersContent>("partners")
       .then((data) => {
         if (isMounted && data && typeof data === "object" && data.title) {
           setContent(data as PartnersContent);
@@ -113,19 +112,7 @@ export const PartnersSection: React.FC<PartnersSectionProps> = ({
     setIsSaving(true);
     setStatusMessage(null);
     try {
-      const response = await fetch(apiUrl("content.php"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          page: "partners",
-          content: draft,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Nepodařilo se uložit data na server.");
-      }
-
+      await savePageContent("partners", draft);
       setContent(draft);
       setIsEditing(false);
       setStatusMessage("Partneři a popisky byli úspěšně uloženi.");

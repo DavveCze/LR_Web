@@ -16,7 +16,13 @@ export const DashboardPage: React.FC = () => {
     const navigate = useNavigate();
 
     const handleLogout = async () => {
-        await fetch(apiUrl('logout.php'), { credentials: 'include' });
+        try {
+            await fetch(apiUrl('logout.php'), { credentials: 'include' });
+        } catch {
+            // Ignore if backend is offline
+        }
+        localStorage.removeItem('user_role');
+        localStorage.removeItem('convex_auth_token');
         navigate('/login');
     };
 

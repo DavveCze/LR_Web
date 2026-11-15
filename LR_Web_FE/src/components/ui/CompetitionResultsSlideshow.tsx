@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { apiUrl } from '../../api/client';
+import { getResultsList } from '../../api/client';
 import { DarkButton } from './ButtonPrefab';
 
 export interface RawCompetitionResult {
@@ -185,14 +185,22 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
   useEffect(() => {
     let isMounted = true;
 
-    fetch(apiUrl('dancers.php?view=results'))
-      .then((res) => (res.ok ? res.json() : null))
-      .then((payload) => {
-        if (!isMounted || !payload || payload.status !== 'success' || !Array.isArray(payload.data)) {
+    getResultsList()
+      .then((data) => {
+        if (!isMounted || !Array.isArray(data) || data.length === 0) {
           return;
         }
 
-        const rawList = payload.data as RawCompetitionResult[];
+        const rawList: RawCompetitionResult[] = data.map((item) => ({
+          id: item.id || item._id,
+          pair_id: item.pair_id || 0,
+          competition_name: item.competition_name || item.competitionName || "",
+          date: item.date || "",
+          location: item.location || "",
+          placement: item.placement || "",
+          dancer1: item.dancer1 || item.dancerNames || "",
+          dancer2: item.dancer2 || null,
+        }));
 
         // 1. Seskupení výsledků podle soutěže (název + datum + místo)
         const groupsMap = new Map<string, CompetitionGroup>();

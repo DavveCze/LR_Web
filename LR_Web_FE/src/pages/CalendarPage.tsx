@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { EditableProvider, EditableText } from "../components/cms/EditableContent";
 import { PageHeader } from "../components/layout/PageHeader";
 import { HomeButton } from "../components/ui/HomeButton";
-import { apiUrl } from "../api/client";
+import { apiUrl, api } from "../api/client";
+import { convex } from "../convex";
 import { formatShortAddress } from "../utils/formatAddress";
 
 export interface EventItem {
@@ -220,6 +221,17 @@ export const CalendarPage: React.FC = () => {
     let isMounted = true;
     const fetchCalendar = async () => {
       try {
+        if (convex) {
+          try {
+            const list = await (convex as any).query(api.calendar.listEvents, {});
+            if (isMounted && Array.isArray(list) && list.length > 0) {
+              setEvents(list as EventItem[]);
+              return;
+            }
+          } catch {
+            // fallback
+          }
+        }
         const res = await fetch(apiUrl("calendar.php"));
         if (!res.ok) return;
         const data = await res.json();

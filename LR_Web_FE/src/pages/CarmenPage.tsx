@@ -4,7 +4,7 @@ import { DarkButton } from "../components/ui/ButtonPrefab";
 import { Slideshow } from "../components/ui/Slideshow";
 import { RajceGallery } from "../components/gallery/RajceGallery";
 import { PageHeader } from "../components/layout/PageHeader";
-import { apiUrl } from "../api/client";
+import { getPageContent } from "../api/client";
 
 type CarmenTab = "tabory" | "prehled" | "tabor" | "primestsky" | "vikend" | "fotogalerie";
 
@@ -170,13 +170,12 @@ export const CarmenPage: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
-    fetch(apiUrl("content.php?page=carmen"))
-      .then((res) => (res.ok ? res.json() : null))
+    getPageContent<Partial<CarmenContentData>>("carmen")
       .then((data) => {
         if (isMounted && data && typeof data === "object" && Object.keys(data).length > 0) {
           setContent((prev) => ({
             overview: { ...prev.overview, ...(data.overview || {}) },
-            tabory: { ...prev.tabory, ...(data.tabory || {}) },
+            tabory: { ...prev.tabory, ...(data.tabory || {}) } as CarmenTaboryData,
             tabor: { ...prev.tabor, ...(data.tabor || {}) },
             primestsky: { ...prev.primestsky, ...(data.primestsky || {}) },
             vikend: { ...prev.vikend, ...(data.vikend || {}) },

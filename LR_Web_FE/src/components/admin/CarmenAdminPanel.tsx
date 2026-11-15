@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { apiUrl } from "../../api/client";
+import { getPageContent, savePageContent } from "../../api/client";
 import { ImagePickerInput } from "./ImagePickerInput";
 
 interface CarmenOverview {
@@ -73,8 +73,7 @@ export const CarmenAdminPanel: React.FC = () => {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
-    fetch(apiUrl("content.php?page=carmen"))
-      .then((res) => res.json())
+    getPageContent<CarmenContent>("carmen")
       .then((json) => {
         if (json && typeof json === "object") {
           setData(json as CarmenContent);
@@ -92,20 +91,7 @@ export const CarmenAdminPanel: React.FC = () => {
     setMessage(null);
 
     try {
-      const res = await fetch(apiUrl("content.php"), {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          page: "carmen",
-          content: data,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Chyba při ukládání na serveru.");
-      }
-
+      await savePageContent("carmen", data);
       setMessage({ type: "success", text: "Změny sekce Carmen byly úspěšně uloženy!" });
     } catch (err) {
       setMessage({

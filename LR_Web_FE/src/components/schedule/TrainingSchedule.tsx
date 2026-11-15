@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { apiUrl } from "../../api/client";
-
-const API_URL = apiUrl('training-schedule.php');
+import { getScheduleList } from "../../api/client";
 
 const DAYS = [
   { key: "monday", label: "Pondělí" },
@@ -328,11 +326,10 @@ export function TrainingSchedule({ exportRef }: { exportRef?: React.RefObject<HT
   }, [blocks]);
 
   useEffect(() => {
-    fetch(API_URL)
-      .then((response) => response.json())
-      .then((payload) => {
-        if (payload.status === "success") {
-          setBlocks(payload.data);
+    getScheduleList()
+      .then((items) => {
+        if (Array.isArray(items) && items.length > 0) {
+          setBlocks(items);
         }
       })
       .finally(() => setLoading(false));

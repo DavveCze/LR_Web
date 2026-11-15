@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { apiUrl } from "../api/client";
+import { getPageContent, submitContactInquiry } from "../api/client";
 import { PageHeader } from "../components/layout/PageHeader";
 import {
   TrainingLocation,
@@ -22,8 +22,7 @@ export const ContactPage: React.FC = () => {
   const [locations, setLocations] = useState<TrainingLocation[]>(DEFAULT_TRAINING_LOCATIONS);
 
   useEffect(() => {
-    fetch(apiUrl("content.php?page=training_locations"))
-      .then((res) => res.json())
+    getPageContent<TrainingLocation[]>("training_locations")
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setLocations(data);
@@ -40,24 +39,15 @@ export const ContactPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(apiUrl("contact.php"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          email,
-          phone,
-          message,
-          website: honeypot,
-          _ts: timestamp,
-        }),
+      await submitContactInquiry({
+        name,
+        email,
+        phone,
+        message,
+        website: honeypot,
+        _ts: timestamp,
+        page: "contact",
       });
-
-      const result = await response.json();
-
-      if (!response.ok || result.status !== "success") {
-        throw new Error(result.message || "Odeslání zprávy selhalo.");
-      }
 
       setSent(true);
     } catch (err) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { apiUrl } from "../../api/client";
+import { getPageContent, savePageContent } from "../../api/client";
 import { formatShortAddress } from "../../utils/formatAddress";
 
 export interface TrainingLocation {
@@ -44,8 +44,7 @@ export const TrainingLocationsAdmin: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
-    fetch(apiUrl("content.php?page=training_locations"))
-      .then((res) => res.json())
+    getPageContent<TrainingLocation[]>("training_locations")
       .then((data) => {
         if (!isMounted) return;
         if (Array.isArray(data) && data.length > 0) {
@@ -72,24 +71,10 @@ export const TrainingLocationsAdmin: React.FC = () => {
     try {
       setSaving(true);
       setFeedback(null);
-      const res = await fetch(apiUrl("content.php"), {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          page: "training_locations",
-          content: updated,
-        }),
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        setLocations(updated);
-        setFeedback("Tréninková místa byla úspěšně uložena.");
-        setTimeout(() => setFeedback(null), 3500);
-      } else {
-        throw new Error(result.error || "Uložení selhalo");
-      }
+      await savePageContent("training_locations", updated);
+      setLocations(updated);
+      setFeedback("Tréninková místa byla úspěšně uložena.");
+      setTimeout(() => setFeedback(null), 3500);
     } catch (err) {
       alert("Chyba při ukládání: " + (err instanceof Error ? err.message : String(err)));
     } finally {

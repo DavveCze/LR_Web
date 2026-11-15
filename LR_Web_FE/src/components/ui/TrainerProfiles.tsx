@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { HelperImage } from "./HelperImage";
-import { apiUrl } from "../../api/client";
+import { getTrainersList } from "../../api/client";
 
 const path = "treneri"; // složka s obrázky trenérů
 
@@ -96,16 +96,22 @@ export const TrainerGrid: React.FC<TrainerGridProps> = ({ filterRole = "trainer"
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(apiUrl('trainers.php'))
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'success') {
-          // Filtrujeme pouze aktivní záznamy
-          const activeMembers = data.data.filter((t: TrainerProps) => t.is_active !== false && t.title === (filterRole === 'admin' ? 'Webmaster' : 'Trenér'));
-
-          setTrainers(activeMembers);
-        }
+    getTrainersList()
+      .then((items) => {
+        const formatted: TrainerProps[] = items.map((t) => ({
+          full_name: t.full_name || t.name,
+          title: t.title || t.role || "Trenér",
+          info: t.info || t.bio || "",
+          image_src: t.image_src || t.image_url || t.image,
+          is_active: t.is_active ?? t.isActive ?? true,
+          order: t.order || 0,
+        }));
+        const activeMembers = formatted.filter(
+          (t) => t.is_active !== false && t.title === (filterRole === "admin" ? "Webmaster" : "Trenér")
+        );
+        setTrainers(activeMembers);
       })
+      .catch(() => setTrainers([]))
       .finally(() => setLoading(false));
   }, [filterRole]);
 

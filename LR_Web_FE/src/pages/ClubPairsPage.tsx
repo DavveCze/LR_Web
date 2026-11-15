@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DarkButton } from "../components/ui/ButtonPrefab";
 import { PageHeader } from "../components/layout/PageHeader";
-import { apiUrl } from "../api/client";
-
-const API_URL = apiUrl('dancers.php');
+import { getDancersList } from "../api/client";
 
 type Person = {
   id: number;
@@ -104,16 +102,15 @@ export function ClubPairsPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API_URL}?view=pairs`).then((response) => response.json()),
-      fetch(`${API_URL}?view=singles`).then((response) => response.json()),
+      getDancersList("pair"),
+      getDancersList("single"),
     ])
-      .then(([pairsPayload, singlesPayload]) => {
-        if (pairsPayload.status === "success") {
-          setPairs(pairsPayload.data);
+      .then(([pairsData, singlesData]) => {
+        if (Array.isArray(pairsData) && pairsData.length > 0) {
+          setPairs(pairsData);
         }
-
-        if (singlesPayload.status === "success") {
-          setSingles(singlesPayload.data);
+        if (Array.isArray(singlesData) && singlesData.length > 0) {
+          setSingles(singlesData);
         }
       })
       .finally(() => setLoading(false));

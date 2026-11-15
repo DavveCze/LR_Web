@@ -3,7 +3,7 @@ import { HelperImage, HelperBackgroundSection } from "../components/ui/HelperIma
 import { CompetitionResultsSlideshow } from "../components/ui/CompetitionResultsSlideshow";
 import { HomeButton } from "../components/ui/HomeButton";
 import { LightButton, DarkButton } from "../components/ui/ButtonPrefab";
-import { apiUrl } from "../api/client";
+import { getNewsList } from "../api/client";
 
 interface LatestNewsItem {
   id: number;
@@ -24,11 +24,17 @@ export const HomePage: FC = () => {
   }, [isNewsPaused]);
 
   useEffect(() => {
-    fetch(apiUrl("news.php?latest=1"))
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data && data.status === "success" && data.data) {
-          setLatestNews(data.data as LatestNewsItem);
+    getNewsList({ latest: true })
+      .then((items) => {
+        if (items && items.length > 0) {
+          const item = items[0];
+          setLatestNews({
+            id: item.id || item._id,
+            headline: item.headline || item.title,
+            text: item.text || item.perex || item.content,
+            date: item.date || item.publishedAt,
+            image_url: item.image_url || item.image,
+          });
         }
       })
       .catch(() => {

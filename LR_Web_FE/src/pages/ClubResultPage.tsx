@@ -2,9 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DarkButton } from "../components/ui/ButtonPrefab";
 import { PageHeader } from "../components/layout/PageHeader";
-import { apiUrl } from "../api/client";
-
-const API_URL = apiUrl("dancers.php");
+import { getResultsList } from "../api/client";
 
 type ResultItem = {
   id: number;
@@ -251,11 +249,10 @@ export function ClubResultsPage() {
   const [selectedSeason, setSelectedSeason] = useState<string>("");
 
   useEffect(() => {
-    fetch(`${API_URL}?view=results`)
-      .then((response) => response.json())
-      .then((payload) => {
-        if (payload.status === "success" && Array.isArray(payload.data)) {
-          setResults(payload.data);
+    getResultsList()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setResults(data);
         }
       })
       .finally(() => setLoading(false));

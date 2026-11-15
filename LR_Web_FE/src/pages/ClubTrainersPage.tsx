@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { apiUrl } from "../api/client";
+import { getTrainersList } from "../api/client";
 import { TrainerProps, TrainerProfileSmall, TrainerProfileLarge } from "../components/ui/TrainerProfiles";
 import { PageHeader } from "../components/layout/PageHeader";
 
@@ -8,14 +8,20 @@ export const ClubTrainersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(apiUrl('trainers.php'))
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'success') {
-            // Pouze trénery (ne administrativu)
-            setTrainers(data.data.filter((t: TrainerProps) => t.title === 'Trenér' && t.is_active !== false));
-        }
+    getTrainersList()
+      .then((items) => {
+        // Normalizace formátu
+        const formatted: TrainerProps[] = items.map((t) => ({
+          full_name: t.full_name || t.name,
+          title: t.title || t.role || "Trenér",
+          image_src: t.image_src || t.image_url || t.image || "/assets/imgs/dancers/default_dancer.webp",
+          info: t.info || t.bio || "",
+          order: t.order || 0,
+          is_active: t.is_active ?? t.isActive ?? true,
+        }));
+        setTrainers(formatted.filter((t) => (t.title === "Trenér" || !t.title) && t.is_active !== false));
       })
+      .catch(() => setTrainers([]))
       .finally(() => setLoading(false));
   }, []);
 

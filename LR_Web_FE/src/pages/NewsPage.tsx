@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { apiUrl } from "../api/client";
+import { getNewsList } from "../api/client";
 import { PageHeader } from "../components/layout/PageHeader";
 
 export interface NewsItem {
@@ -31,15 +31,18 @@ export const NewsPage: React.FC = () => {
   const location = useLocation();
 
   useEffect(() => {
-    fetch(apiUrl("news.php"))
-      .then((res) => {
-        if (!res.ok) throw new Error("Chyba načítání");
-        return res.json();
-      })
-      .then((data) => {
-        if (data.status === "success" && Array.isArray(data.data)) {
-          setNews(data.data);
-        }
+    getNewsList()
+      .then((items) => {
+        const formatted: NewsItem[] = items.map((item) => ({
+          id: item.id || item._id,
+          headline: item.headline || item.title,
+          text: item.text || item.perex || item.content,
+          date: item.date || item.publishedAt,
+          image_url: item.image_url || item.image,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+        }));
+        setNews(formatted);
       })
       .catch(() => {
         setNews([]);
