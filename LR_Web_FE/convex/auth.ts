@@ -13,35 +13,66 @@ export const loginUser = mutation({
     password: v.string(),
   },
   handler: async (ctx, args) => {
-    const email = args.email.trim().toLowerCase();
+    const inputIdentifier = args.email.trim().toLowerCase();
     const password = args.password;
 
-    if (!email || !password) {
-      return { status: "error", message: "Zadejte e-mail i heslo." };
+    if (!inputIdentifier || !password) {
+      return { status: "error", message: "Zadejte přihlašovací jméno i heslo." };
     }
 
-    // 1. Zkontrolujeme, zda uživatel existuje v tabulce users
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", email))
-      .first();
+    // 1. Získání přihlašovacích údajů z Convex Environment Variables
+    // Administrátor (ADMIN_USERNAME / ADMIN_EMAIL a ADMIN_PASSWORD)
+    const adminUser = (
+      process.env.ADMIN_USERNAME ||
+      process.env.ADMIN_EMAIL ||
+      process.env.ADMIN_USER ||
+      "admin"
+    ).trim().toLowerCase();
+    const adminPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_PASS || "lrdance2026";
 
-    const isClubAdmin = email === "lrdanceostrava@gmail.com";
-    const isOwner = email.includes("majitel") || email === "carmen@lr-dance.cz";
+    // Majitel / Owner (OWNER_USERNAME / OWNER_EMAIL a OWNER_PASSWORD)
+    const ownerUser = (
+      process.env.OWNER_USERNAME ||
+      process.env.OWNER_EMAIL ||
+      process.env.OWNER_USER ||
+      "owner"
+    ).trim().toLowerCase();
+    const ownerPass = process.env.OWNER_PASSWORD || process.env.OWNER_PASS || "carmen2026";
 
-    const expectedAdminPass = process.env.ADMIN_PASSWORD || "lrdance2026";
-    const expectedOwnerPass = process.env.OWNER_PASSWORD || "carmen2026";
+    // Povolené identifikátory pro admina (přihlašovací jméno z env + klubové aliasy)
+    const adminAliases = new Set([
+      adminUser,
+      "admin",
+      "lrdanceostrava@gmail.com",
+      "admin@lr-dance.cz",
+    ]);
 
-    // 2. Klubový účet – striktní ověření hesla
+    // Povolené identifikátory pro majitele (přihlašovací jméno z env + aliasy)
+    const ownerAliases = new Set([
+      ownerUser,
+      "owner",
+      "majitel",
+      "carmen@lr-dance.cz",
+    ]);
+
+    const isClubAdmin = adminAliases.has(inputIdentifier);
+    const isOwner = ownerAliases.has(inputIdentifier);
+
+    // 2. Klubový účet administrátora
     if (isClubAdmin) {
-      if (password !== expectedAdminPass) {
+      if (password !== adminPass) {
         return { status: "error", message: "Neplatné heslo administrátora." };
       }
+
+      const user = await ctx.db
+        .query("users")
+        .withIndex("email", (q) => q.eq("email", inputIdentifier))
+        .first();
 
       if (!user) {
         await ctx.db.insert("users", {
           name: "Administrátor LR Dance",
-          email,
+          email: inputIdentifier,
           role: "admin",
         });
       }
@@ -54,15 +85,21 @@ export const loginUser = mutation({
       };
     }
 
+    // 3. Účet majitele (owner)
     if (isOwner) {
-      if (password !== expectedOwnerPass) {
+      if (password !== ownerPass) {
         return { status: "error", message: "Neplatné heslo majitele." };
       }
+
+      const user = await ctx.db
+        .query("users")
+        .withIndex("email", (q) => q.eq("email", inputIdentifier))
+        .first();
 
       if (!user) {
         await ctx.db.insert("users", {
           name: "Majitel TŠ Carmen",
-          email,
+          email: inputIdentifier,
           role: "owner",
         });
       }

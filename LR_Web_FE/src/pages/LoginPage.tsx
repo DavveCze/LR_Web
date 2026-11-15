@@ -72,13 +72,12 @@ export const LoginPage: React.FC = () => {
   };
 
   const validateInput = (): string | null => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      return 'Please enter a valid email address.';
+    if (!email.trim()) {
+      return 'Zadejte uživatelské jméno nebo e-mail.';
     }
 
-    if (password.length < 8) {
-      return 'Password must be at least 8 characters long.';
+    if (!password) {
+      return 'Zadejte heslo.';
     }
 
     return null;
@@ -174,9 +173,9 @@ export const LoginPage: React.FC = () => {
           <div className="px-6 py-10 sm:px-8 lg:px-12">
             <div className="mx-auto flex h-full max-w-md flex-col justify-center">
               <div className="mb-8">
-                <h2 className="text-3xl font-semibold tracking-tight text-slate-950">Login</h2>
+                <h2 className="text-3xl font-semibold tracking-tight text-slate-950">Přihlášení</h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  Enter your credentials to access the admin dashboard.
+                  Zadejte své přihlašovací údaje pro přístup do administrace.
                 </p>
               </div>
 
@@ -195,22 +194,22 @@ export const LoginPage: React.FC = () => {
 
                 {isLocked && (
                   <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    Account locked due to multiple failed attempts. Try again in {lockoutTime} seconds.
+                    Účet byl dočasně uzamčen kvůli opakovaným neúspěšným pokusům. Zkuste to za {lockoutTime} s.
                   </div>
                 )}
 
                 <div className="space-y-2">
                   <label htmlFor="email" className="text-sm font-medium text-slate-700">
-                    Email
+                    Uživatelské jméno nebo e-mail
                   </label>
                   <input
                     id="email"
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading || isLocked}
-                    placeholder="you@example.com"
-                    autoComplete="email"
+                    placeholder="admin nebo vas@email.cz"
+                    autoComplete="username"
                     required
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-4 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100"
                   />
@@ -218,7 +217,7 @@ export const LoginPage: React.FC = () => {
 
                 <div className="space-y-2">
                   <label htmlFor="password" className="text-sm font-medium text-slate-700">
-                    Password
+                    Heslo
                   </label>
                   <input
                     id="password"
@@ -226,7 +225,7 @@ export const LoginPage: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading || isLocked}
-                    placeholder="Enter your password"
+                    placeholder="Zadejte heslo"
                     autoComplete="current-password"
                     required
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-4 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100"
@@ -239,7 +238,7 @@ export const LoginPage: React.FC = () => {
                   className="group inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-950/20 transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-950/15 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
                 >
                   <span className="transition group-hover:translate-x-0.5">
-                    {loading ? 'Logging in...' : 'Login'}
+                    {loading ? 'Přihlašování...' : 'Přihlásit se'}
                   </span>
                 </button>
               </form>

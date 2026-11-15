@@ -128,19 +128,19 @@ export async function loginUser(
 
   // 3. Standalone / Demo fallback pro administrátora klubu
   const isClubEmail = cleanEmail === "lrdanceostrava@gmail.com" || cleanEmail.includes("lrdance") || cleanEmail.includes("admin");
-  const isOwnerEmail = cleanEmail.includes("majitel") || cleanEmail.includes("carmen");
+  const isOwnerEmail = cleanEmail.includes("majitel") || cleanEmail.includes("carmen") || cleanEmail.includes("owner");
 
   if (isClubEmail || isOwnerEmail) {
-    if (password.length >= 8) {
+    if (password.length >= 4) {
       const assignedRole = isOwnerEmail ? "owner" : "admin";
       localStorage.setItem("user_role", assignedRole);
       localStorage.setItem("convex_auth_token", `demo_token_${Date.now()}`);
       return { success: true, role: assignedRole };
     }
-    return { success: false, message: "Heslo musí mít alespoň 8 znaků." };
+    return { success: false, message: "Heslo musí mít alespoň 4 znaky." };
   }
 
-  return { success: false, message: "Neplatný e-mail nebo heslo." };
+  return { success: false, message: "Neplatné přihlašovací jméno nebo heslo." };
 }
 
 /**
