@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { apiUrl } from '../../api/client';
+import { apiUrl, api, safeJson } from '../../api/client';
+import { convex } from '../../convex';
 
 type Asset = {
   folder: string;
@@ -13,21 +14,46 @@ export const ImageManager: React.FC = () => {
   const [selectedFolder, setSelectedFolder] = useState<string>('All');
 
   const fetchAssets = async () => {
+    const combined: Asset[] = [];
+    const seen = new Set<string>();
+
+    if (convex) {
+      try {
+        const cImages = await (convex as any).query(api.storage.listImages, {});
+        if (Array.isArray(cImages)) {
+          cImages.forEach((img: any) => {
+            const key = `${img.folder}-${img.baseName}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              combined.push({
+                folder: img.folder,
+                baseName: img.baseName,
+                previewUrl: img.previewUrl || img.url || '',
+              });
+            }
+          });
+        }
+      } catch (cErr) {
+        console.warn('[Convex] listImages failed, trying REST:', cErr);
+      }
+    }
+
     try {
       const res = await fetch(apiUrl('images.php'));
-      const isJson = (res.headers.get('content-type') || '').includes('application/json');
-      if (res.ok && isJson) {
-        const data = await res.json();
-        if (data.status === 'success' && Array.isArray(data.data)) {
-          setAssets(data.data);
-        }
-      } else {
-        setAssets([]);
+      const data = await safeJson<any>(res);
+      if (res.ok && data?.status === 'success' && Array.isArray(data.data)) {
+        data.data.forEach((item: Asset) => {
+          const key = `${item.folder}-${item.baseName}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            combined.push(item);
+          }
+        });
       }
     } catch (err) {
-      console.warn('[ImageManager] Chyba načtení obrázků:', err);
-      setAssets([]);
+      console.warn('[ImageManager] Chyba načtení obrázků z REST:', err);
     } finally {
+      setAssets(combined);
       setLoading(false);
     }
   };
@@ -39,12 +65,25 @@ export const ImageManager: React.FC = () => {
   const handleDelete = async (folder: string, baseName: string) => {
     if (!confirm(`Opravdu smazat všechny varianty obrázku "${baseName}" ve složce "${folder}"?`)) return;
 
-    await fetch(apiUrl('images.php'), {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folder, baseName }),
-      credentials: 'include'
-    });
+    if (convex) {
+      try {
+        await (convex as any).mutation(api.storage.deleteImage, { folder, baseName });
+      } catch (cErr) {
+        console.warn('[Convex] deleteImage failed:', cErr);
+      }
+    }
+
+    try {
+      await fetch(apiUrl('images.php'), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder, baseName }),
+        credentials: 'include'
+      });
+    } catch {
+      // ignore
+    }
+
     fetchAssets();
   };
 
@@ -52,12 +91,25 @@ export const ImageManager: React.FC = () => {
     const newBaseName = prompt('Zadejte nový název (bez diakritiky a mezer):', oldBaseName);
     if (!newBaseName || newBaseName === oldBaseName) return;
 
-    await fetch(apiUrl('images.php'), {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folder, oldBaseName, newBaseName }),
-      credentials: 'include'
-    });
+    if (convex) {
+      try {
+        await (convex as any).mutation(api.storage.renameImage, { folder, oldBaseName, newBaseName });
+      } catch (cErr) {
+        console.warn('[Convex] renameImage failed:', cErr);
+      }
+    }
+
+    try {
+      await fetch(apiUrl('images.php'), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder, oldBaseName, newBaseName }),
+        credentials: 'include'
+      });
+    } catch {
+      // ignore
+    }
+
     fetchAssets();
   };
 

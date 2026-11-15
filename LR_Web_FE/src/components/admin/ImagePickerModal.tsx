@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { apiUrl } from '../../api/client';
+import { apiUrl, api, safeJson } from '../../api/client';
+import { convex } from '../../convex';
 import { IMAGE_FOLDER_OPTIONS } from './ImageFolders';
 
 export interface ImageAsset {
@@ -37,23 +38,54 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
 
     let isMounted = true;
 
-    fetch(apiUrl('images.php'))
-      .then(async (res) => {
-        const isJson = (res.headers.get('content-type') || '').includes('application/json');
-        if (res.ok && isJson) return await res.json();
-        return null;
-      })
-      .then((data) => {
-        if (isMounted && data?.status === 'success' && Array.isArray(data.data)) {
-          setAssets(data.data);
+    const loadImages = async () => {
+      const combined: ImageAsset[] = [];
+      const seen = new Set<string>();
+
+      if (convex) {
+        try {
+          const cImages = await (convex as any).query(api.storage.listImages, {});
+          if (Array.isArray(cImages)) {
+            cImages.forEach((img: any) => {
+              const key = `${img.folder}-${img.baseName}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                combined.push({
+                  folder: img.folder,
+                  baseName: img.baseName,
+                  previewUrl: img.previewUrl || img.url || '',
+                });
+              }
+            });
+          }
+        } catch (cErr) {
+          console.warn('[Convex] listImages v ImagePickerModal failed:', cErr);
         }
-      })
-      .catch((err) => {
-        console.error('Chyba při načítání obrázků:', err);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
+      }
+
+      try {
+        const res = await fetch(apiUrl('images.php'));
+        const data = await safeJson<any>(res);
+        if (res.ok && data?.status === 'success' && Array.isArray(data.data)) {
+          data.data.forEach((item: ImageAsset) => {
+            const key = `${item.folder}-${item.baseName}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              combined.push(item);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Chyba při načítání obrázků:', err);
+      } finally {
+        if (isMounted) {
+          setAssets(combined);
+          setLoading(false);
+        }
+      }
+    };
+
+    loadImages();
 
     return () => {
       isMounted = false;

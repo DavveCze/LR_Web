@@ -8,7 +8,7 @@ const API_URL = apiUrl('dancers.php');
 type Category = "" | "M" | "A" | "B" | "C" | "D" | "E";
 
 type Dancer = {
-  idt: number;
+  idt: number | string;
   name: string;
   surname: string;
   category_lat: Category | null;
@@ -26,9 +26,9 @@ type Dancer = {
 };
 
 type DancePair = {
-  pair_id: number;
-  idt1: number;
-  idt2: number | null;
+  pair_id: number | string;
+  idt1: number | string;
+  idt2: number | string | null;
   category_lat?: Category | null;
   category_stt?: Category | null;
   points: number;
@@ -50,8 +50,8 @@ type DancePair = {
 };
 
 type CompetitionResult = {
-  id: number;
-  pair_id: number;
+  id: number | string;
+  pair_id: number | string;
   competition_name: string;
   date: string;
   location: string;
@@ -68,7 +68,7 @@ type AdminData = {
 };
 
 type DancerForm = {
-  idt?: number;
+  idt?: number | string;
   csts_idt: string;
   name: string;
   surname: string;
@@ -85,7 +85,7 @@ type DancerForm = {
 };
 
 type PairForm = {
-  pair_id?: number;
+  pair_id?: number | string;
   idt1: string;
   idt2: string;
   category_lat: Category;
@@ -239,6 +239,7 @@ export function DanceAdminPanel() {
   const [dancerForm, setDancerForm] = useState<DancerForm>(EMPTY_DANCER);
   const [pairForm, setPairForm] = useState<PairForm>(EMPTY_PAIR);
   const [resultForm, setResultForm] = useState<ResultForm>(EMPTY_RESULT);
+  const [lastCstsData, setLastCstsData] = useState<any>(null);
 
   const lastSyncTime = useMemo(() => {
     const dates = [
@@ -257,15 +258,41 @@ export function DanceAdminPanel() {
     setLoading(true);
     setError("");
 
+    if (convex) {
+      try {
+        const payload = await (convex as any).query(
+          api.dancers.listAllAdminData,
+          {}
+        );
+        if (
+          payload &&
+          (payload.dancers?.length > 0 ||
+            payload.pairs?.length > 0 ||
+            payload.results?.length > 0)
+        ) {
+          setData(payload);
+          setLoading(false);
+          return;
+        }
+      } catch (cErr) {
+        console.warn("[Convex] listAllAdminData failed, trying REST:", cErr);
+      }
+    }
+
     try {
       const response = await fetch(`${API_URL}?admin=1`, {
         credentials: "include",
         cache: "no-store",
       });
 
-      const isJson = (response.headers.get("content-type") || "").includes("application/json");
+      const isJson = (response.headers.get("content-type") || "").includes(
+        "application/json"
+      );
       if (!response.ok || !isJson) {
-        setData({ pairs: [], dancers: [], results: [] });
+        // Pokud REST nevrátí data a máme Convex, zachováme data z Convexu
+        if (!convex) {
+          setData({ pairs: [], dancers: [], results: [] });
+        }
         return;
       }
 
@@ -273,17 +300,19 @@ export function DanceAdminPanel() {
 
       if (!response.ok || payload.status !== "success") {
         throw new Error(
-          getErrorMessage(payload, "Nepodařilo se načíst data tanečníků."),
+          getErrorMessage(payload, "Nepodařilo se načíst data tanečníků.")
         );
       }
 
       setData(payload.data);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Při načítání dat došlo k neočekávané chybě.",
-      );
+      if (!convex) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Při načítání dat došlo k neočekávané chybě."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -299,11 +328,155 @@ export function DanceAdminPanel() {
 
   const sendRequest = async (
     method: "POST" | "PUT" | "DELETE",
-    body: Record<string, unknown>,
+    body: Record<string, unknown>
   ) => {
     setSaving(true);
     setError("");
     setMessage("");
+
+    if (convex) {
+      try {
+        const action = body.action as string;
+        let successMsg = "Změny byly uloženy.";
+
+        if (action === "create_from_csts") {
+          let athlete = lastCstsData;
+          if (!athlete || athlete.csts_idt !== Number(body.idt)) {
+            const previewRes = await (convex as any).action(
+              api.csts.fetchAthletePreview,
+              { idt: Number(body.idt) }
+            );
+            if (previewRes && previewRes.status === "success") {
+              athlete = previewRes.data;
+            }
+          }
+
+          if (!athlete) {
+            throw new Error("Nepodařilo se stáhnout data tanečníka z ČSTS.");
+          }
+
+          const res = await (convex as any).mutation(
+            api.dancers.importFromCsts,
+            {
+              athlete,
+              linkPartner: Boolean(body.link_partner),
+            }
+          );
+          successMsg = res.message || successMsg;
+        } else if (action === "create_dancer") {
+          const { action: _a, idt: _i, ...dData } = body;
+          await (convex as any).mutation(api.dancers.createDancer, dData);
+          successMsg = "Tanečník byl úspěšně přidán.";
+        } else if (action === "update_dancer") {
+          const { action: _a, idt, ...dData } = body;
+          if (idt) {
+            await (convex as any).mutation(api.dancers.updateDancer, {
+              id: idt,
+              ...dData,
+            });
+          }
+          successMsg = "Tanečník byl úspěšně upraven.";
+        } else if (action === "delete_dancer") {
+          if (body.idt) {
+            await (convex as any).mutation(api.dancers.deleteDancer, {
+              id: body.idt,
+            });
+          }
+          successMsg = "Tanečník byl smazán.";
+        } else if (action === "create_pair") {
+          const { action: _a, pair_id: _p, ...pData } = body;
+          const d1 = data.dancers.find(
+            (d) => String(d.idt) === String(pData.idt1)
+          );
+          const d2 = data.dancers.find(
+            (d) => String(d.idt) === String(pData.idt2)
+          );
+
+          await (convex as any).mutation(api.dancers.createPair, {
+            ...pData,
+            dancer1_name: d1 ? d1.name : "",
+            dancer1_surname: d1 ? d1.surname : "",
+            dancer1_sex: d1 ? d1.sex : "M",
+            dancer2_name: d2 ? d2.name : undefined,
+            dancer2_surname: d2 ? d2.surname : undefined,
+            dancer2_sex: d2 ? d2.sex : undefined,
+          });
+          successMsg = "Taneční pár byl úspěšně vytvořen.";
+        } else if (action === "update_pair") {
+          const { action: _a, pair_id, ...pData } = body;
+          if (pair_id) {
+            const d1 = data.dancers.find(
+              (d) => String(d.idt) === String(pData.idt1)
+            );
+            const d2 = data.dancers.find(
+              (d) => String(d.idt) === String(pData.idt2)
+            );
+
+            await (convex as any).mutation(api.dancers.updatePair, {
+              id: pair_id,
+              ...pData,
+              dancer1_name: d1 ? d1.name : "",
+              dancer1_surname: d1 ? d1.surname : "",
+              dancer1_sex: d1 ? d1.sex : "M",
+              dancer2_name: d2 ? d2.name : undefined,
+              dancer2_surname: d2 ? d2.surname : undefined,
+              dancer2_sex: d2 ? d2.sex : undefined,
+            });
+          }
+          successMsg = "Taneční pár byl úspěšně upraven.";
+        } else if (action === "delete_pair") {
+          if (body.pair_id) {
+            await (convex as any).mutation(api.dancers.deletePair, {
+              id: body.pair_id,
+            });
+          }
+          successMsg = "Taneční pár byl smazán.";
+        } else if (action === "create_result") {
+          const entries = (body.entries as any[]) || [];
+          for (const entry of entries) {
+            const pair = data.pairs.find(
+              (p) => String(p.pair_id) === String(entry.pair_id)
+            );
+            await (convex as any).mutation(api.dancers.createResult, {
+              competition_name: String(body.competition_name || ""),
+              date: String(body.date || ""),
+              location: String(body.location || ""),
+              placement: String(entry.placement || ""),
+              pair_id: entry.pair_id,
+              dancer1: pair
+                ? `${pair.dancer1_name} ${pair.dancer1_surname}`
+                : undefined,
+              dancer2:
+                pair && pair.dancer2_name
+                  ? `${pair.dancer2_name} ${pair.dancer2_surname}`
+                  : undefined,
+            });
+          }
+          successMsg = "Výsledky byly úspěšně přidány.";
+        } else if (action === "delete_result") {
+          if (body.id) {
+            await (convex as any).mutation(api.dancers.deleteResult, {
+              id: body.id,
+            });
+          }
+          successMsg = "Výsledek byl smazán.";
+        }
+
+        setMessage(successMsg);
+        await loadData();
+        return true;
+      } catch (cErr: any) {
+        console.warn("[Convex] operace v DanceAdminPanel selhala, zkouším REST:", cErr);
+        if (
+          cErr &&
+          !String(cErr).includes("Could not find") &&
+          !String(cErr).includes("NetworkError") &&
+          !String(cErr).includes("Failed to fetch")
+        ) {
+          throw cErr;
+        }
+      }
+    }
 
     try {
       const response = await fetch(API_URL, {
@@ -328,8 +501,8 @@ export function DanceAdminPanel() {
         throw new Error(
           getErrorMessage(
             payload,
-            payload?.message || `Operace selhala (kód ${response.status}).`,
-          ),
+            payload?.message || `Operace selhala (kód ${response.status}).`
+          )
         );
       }
 
@@ -341,7 +514,7 @@ export function DanceAdminPanel() {
       setError(
         err instanceof Error
           ? err.message
-          : "Při ukládání došlo k neočekávané chybě.",
+          : "Při ukládání došlo k neočekávané chybě."
       );
 
       return false;
@@ -403,6 +576,7 @@ export function DanceAdminPanel() {
         athleteData = payload.data;
       }
 
+      setLastCstsData(athleteData);
       const a = athleteData;
       setDancerForm((prev) => ({
         ...prev,
@@ -517,8 +691,8 @@ export function DanceAdminPanel() {
         ...pairForm,
         category_lat: pairForm.category_lat || null,
         category_stt: pairForm.category_stt || null,
-        idt1: Number(pairForm.idt1),
-        idt2: pairForm.idt2 ? Number(pairForm.idt2) : null,
+        idt1: pairForm.idt1,
+        idt2: pairForm.idt2 ? pairForm.idt2 : null,
       },
     );
 
@@ -545,7 +719,7 @@ export function DanceAdminPanel() {
       date: resultForm.date,
       location: resultForm.location,
       entries: validEntries.map((e) => ({
-        pair_id: Number(e.pair_id),
+        pair_id: e.pair_id,
         placement: normalizePlacementInput(e.placement) || e.placement.trim(),
       })),
     });

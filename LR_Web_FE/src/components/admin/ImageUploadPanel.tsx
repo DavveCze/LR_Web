@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { apiUrl } from '../../api/client';
+import { apiUrl, api, safeJson } from '../../api/client';
+import { convex } from '../../convex';
 import {
   CUSTOM_FOLDER_VALUE,
   IMAGE_FOLDER_OPTIONS,
@@ -87,6 +88,76 @@ export const ImageUploadPanel: React.FC = () => {
     setError('');
     setResult(null);
 
+    // 1. Primární nahrávání do cloudového Convex Storage
+    if (convex) {
+      try {
+        const postUrl = await (convex as any).mutation(
+          api.storage.generateUploadUrl,
+          {}
+        );
+
+        const uploadRes = await fetch(postUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': image.type },
+          body: image,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error(
+            `Chyba při nahrávání do cloudového úložiště (${uploadRes.status}).`
+          );
+        }
+
+        const { storageId } = await uploadRes.json();
+
+        const saved = await (convex as any).mutation(
+          api.storage.saveImageRecord,
+          {
+            folder,
+            baseName: name.trim(),
+            storageId,
+          }
+        );
+
+        const publicUrl = saved.url || '';
+
+        const convexResult: UploadResponse = {
+          status: 'success',
+          message: 'Obrázek byl úspěšně nahrán do cloudového úložiště.',
+          folder,
+          original: {
+            filename: `${name.trim()}.${image.name.split('.').pop() || 'webp'}`,
+            url: publicUrl,
+          },
+          variants: [
+            { width: 1920, height: 1080, filename: name.trim(), url: publicUrl },
+            { width: 1280, height: 720, filename: name.trim(), url: publicUrl },
+            { width: 768, height: 432, filename: name.trim(), url: publicUrl },
+          ],
+        };
+
+        setResult(convexResult);
+        setImage(null);
+        setName('');
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        setTimeout(() => setResult(null), 5000);
+        return;
+      } catch (cErr: any) {
+        console.warn('[Convex] uploadImage failed, trying REST fallback:', cErr);
+        if (
+          cErr &&
+          !String(cErr).includes('Could not find') &&
+          !String(cErr).includes('NetworkError') &&
+          !String(cErr).includes('Failed to fetch')
+        ) {
+          throw cErr;
+        }
+      }
+    }
+
+    // 2. Fallback pro lokální PHP backend
     const formData = new FormData();
     formData.append('image', image);
     formData.append('folder', folder);
@@ -99,29 +170,20 @@ export const ImageUploadPanel: React.FC = () => {
         body: formData,
       });
 
-      const isJson = (response.headers.get('content-type') || '').includes('application/json');
-      if (!isJson) {
-        throw new Error(`Server vrátil neočekávanou odpověď (kód ${response.status}).`);
-      }
-
-      const data: UploadResponse = await response.json();
-
-      if (!response.ok || data.status !== 'success') {
-        throw new Error(data.message ?? 'Nahrávání obrázku selhalo.');
+      const data = await safeJson<UploadResponse>(response);
+      if (!data || !response.ok || data.status !== 'success') {
+        throw new Error(
+          data?.message ??
+            `Nahrávání obrázku selhalo (kód ${response.status}).`
+        );
       }
 
       setResult(data);
-
-            setResult(data);
-      
-      // VYRESETOVÁNÍ FORMULÁŘE
       setImage(null);
       setName('');
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-      
-      // Volitelně můžeme zprávu o úspěchu po 5 vteřinách schovat
       setTimeout(() => setResult(null), 5000);
     } catch (err) {
       setError(
