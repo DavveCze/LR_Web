@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiUrl } from '../../api/client';
 
@@ -20,6 +20,7 @@ export interface CompetitionGroup {
   location: string;
   results: {
     id: number;
+    pair_id?: number;
     dancer1: string;
     dancer2: string | null;
     placement: string;
@@ -115,14 +116,65 @@ function formatCompetitionDate(dateStr: string): string {
   }
 }
 
+/**
+ * Zjistí nejlepší (nejnižší) číselné umístění z textu pro účely řazení párů (1. místo < 2. místo)
+ */
+function extractBestRank(placement: string): number {
+  const matches = placement.match(/\d+/g);
+  if (!matches) return 999999;
+  let best = 999999;
+  for (const m of matches) {
+    const num = parseInt(m, 10);
+    if (num > 0 && num < best) {
+      best = num;
+    }
+  }
+  return best;
+}
+
+/**
+ * Spojí a seřadí čísla v textu umístění jednoho páru od nejlepšího (např. "6. 5. a 4. místo" -> "4. 5. a 6. místo")
+ */
+function combinePlacementStrings(placements: string[]): string {
+  const allNums: number[] = [];
+  for (const p of placements) {
+    if (!p) continue;
+    const matches = p.match(/\d+/g);
+    if (matches) {
+      for (const m of matches) {
+        const num = parseInt(m, 10);
+        if (!allNums.includes(num)) {
+          allNums.push(num);
+        }
+      }
+    }
+  }
+
+  if (allNums.length === 0) return placements.join(", ");
+
+  allNums.sort((a, b) => a - b);
+
+  if (allNums.length === 1) {
+    return `${allNums[0]}. místo`;
+  }
+  if (allNums.length === 2) {
+    return `${allNums[0]}. a ${allNums[1]}. místo`;
+  }
+  const allButLast = allNums.slice(0, -1).map((n) => `${n}.`).join(" ");
+  const last = allNums[allNums.length - 1];
+  return `${allButLast} a ${last}. místo`;
+}
+
 interface CompetitionResultsSlideshowProps {
   className?: string;
   intervalMs?: number;
+  maxRecentCompetitions?: number;
 }
 
 export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowProps> = ({
   className = '',
   intervalMs = 5000,
+  maxRecentCompetitions = 5,
 }) => {
   const [competitions, setCompetitions] = useState<CompetitionGroup[]>([]);
   const [badgeText, setBadgeText] = useState<string>('🏆 Výsledky soutěží');
@@ -158,18 +210,44 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
               results: [],
             });
           }
-          groupsMap.get(key)!.results.push({
-            id: item.id,
-            dancer1: item.dancer1,
-            dancer2: item.dancer2,
-            placement: item.placement,
-          });
+
+          const comp = groupsMap.get(key)!;
+          // Zkontrolujeme, zda už tento pár v soutěži existuje (podle pair_id nebo jmen)
+          const existingPair = comp.results.find(
+            (r) =>
+              (r.pair_id && r.pair_id === item.pair_id) ||
+              (r.dancer1 === item.dancer1 && r.dancer2 === item.dancer2)
+          );
+
+          if (existingPair) {
+            existingPair.placement = combinePlacementStrings([
+              existingPair.placement,
+              item.placement,
+            ]);
+          } else {
+            comp.results.push({
+              id: item.id,
+              pair_id: item.pair_id,
+              dancer1: item.dancer1,
+              dancer2: item.dancer2,
+              placement: combinePlacementStrings([item.placement]),
+            });
+          }
         }
 
         const allGroups = Array.from(groupsMap.values());
         if (allGroups.length === 0) {
           setCompetitions([]);
           return;
+        }
+
+        // Seřadíme výsledky v rámci každé soutěže od nejlepšího umístění (1. místo první)
+        for (const g of allGroups) {
+          g.results.sort((a, b) => {
+            const numA = extractBestRank(a.placement);
+            const numB = extractBestRank(b.placement);
+            return numA - numB;
+          });
         }
 
         // Seřadíme všechny proběhlé soutěže od nejnovějších
@@ -195,13 +273,13 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
               : '🏆 Výsledky z uplynulého víkendu'
           );
           setHeaderRightText(formatWeekendRange(weekendRef.satStr));
-          setCompetitions(weekendCompetitions);
+          setCompetitions(weekendCompetitions.slice(0, maxRecentCompetitions));
         } else {
-          // REŽIM B: O tomto víkendu se nesoutěžilo -> zobrazíme poslední nedávné soutěže (max 4)
+          // REŽIM B: O tomto víkendu se nesoutěžilo -> zobrazíme poslední nedávné soutěže (max 5)
           setIsRecentFallback(true);
           setBadgeText('🏆 Poslední soutěže tanečních párů');
           setHeaderRightText('Nedávné soutěže');
-          setCompetitions(candidateGroups.slice(0, 4));
+          setCompetitions(candidateGroups.slice(0, maxRecentCompetitions));
         }
       })
       .catch((err) => {
@@ -214,7 +292,7 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [maxRecentCompetitions]);
 
   const total = competitions.length;
 
@@ -226,14 +304,127 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
   const goPrev = () => goTo(activeIndex - 1);
   const goNext = () => goTo(activeIndex + 1);
 
-  // Automatické přepínání slidů (pokud je více než 1 soutěž)
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isPausedRef = useRef<boolean>(isPaused);
+
   useEffect(() => {
-    if (total <= 1 || isPaused) return;
-    const timer = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % total);
-    }, intervalMs);
-    return () => clearInterval(timer);
-  }, [total, intervalMs, isPaused]);
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  // Automatický posun výsledků při přetečení + plynulý přechod na další soutěž
+  useEffect(() => {
+    if (loading || total === 0) return;
+
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    // Vždy na začátku nové soutěže resetujeme pozici nahoru
+    el.scrollTop = 0;
+
+    let animId: number | null = null;
+    let phase: 'top_pause' | 'scrolling' | 'bottom_pause' | 'done' = 'top_pause';
+    let phaseElapsed = 0;
+    let currentScroll = 0;
+    let lastTimestamp: number | null = null;
+
+    // Časování a rychlost
+    const TOP_PAUSE_MS = 2000; // Počáteční pauza pro přečtení prvních párů
+    const BOTTOM_PAUSE_MS = 2200; // Pauza dole pro přečtení spodních párů
+    const NO_SCROLL_DURATION_MS = intervalMs || 5500; // Doba zobrazení, pokud se vše vejde
+    const PIXELS_PER_SECOND = 24; // Pomalý, plynulý posun (cca 24 px za sekundu)
+
+    const step = (now: number) => {
+      if (!lastTimestamp) {
+        lastTimestamp = now;
+        animId = requestAnimationFrame(step);
+        return;
+      }
+
+      const dt = now - lastTimestamp;
+      lastTimestamp = now;
+
+      // Pokud je slideshow pozastavena (např. hover myší nebo dotyk), nezvyšujeme čas ani posun
+      if (isPausedRef.current) {
+        // Pokud uživatel během pozastavení sám prescrolloval, sesynchronizujeme pozici
+        if (el) currentScroll = el.scrollTop;
+        animId = requestAnimationFrame(step);
+        return;
+      }
+
+      const maxScroll = Math.max(0, el.scrollHeight - el.clientHeight);
+
+      // PŘÍPAD 1: Všechny páry se vejdou do okna (není potřeba scrollovat)
+      if (maxScroll <= 4) {
+        phaseElapsed += dt;
+        if (phaseElapsed >= NO_SCROLL_DURATION_MS) {
+          if (total > 1) {
+            setActiveIndex((prev) => (prev + 1) % total);
+          } else {
+            phaseElapsed = 0;
+            animId = requestAnimationFrame(step);
+            return;
+          }
+          return;
+        }
+        animId = requestAnimationFrame(step);
+        return;
+      }
+
+      // PŘÍPAD 2: Páry se nevejdou -> pomalý automatický posun dolů
+      if (phase === 'top_pause') {
+        phaseElapsed += dt;
+        if (phaseElapsed >= TOP_PAUSE_MS) {
+          phase = 'scrolling';
+          phaseElapsed = 0;
+        }
+        animId = requestAnimationFrame(step);
+        return;
+      }
+
+      if (phase === 'scrolling') {
+        currentScroll += (PIXELS_PER_SECOND * dt) / 1000;
+        if (currentScroll >= maxScroll) {
+          currentScroll = maxScroll;
+          el.scrollTop = maxScroll;
+          phase = 'bottom_pause';
+          phaseElapsed = 0;
+        } else {
+          el.scrollTop = currentScroll;
+        }
+        animId = requestAnimationFrame(step);
+        return;
+      }
+
+      if (phase === 'bottom_pause') {
+        phaseElapsed += dt;
+        if (phaseElapsed >= BOTTOM_PAUSE_MS) {
+          phase = 'done';
+          if (total > 1) {
+            setActiveIndex((prev) => (prev + 1) % total);
+          } else {
+            // Pokud je v seznamu pouze 1 soutěž, vrátíme se nahoru a cyklujeme dál
+            el.scrollTop = 0;
+            currentScroll = 0;
+            phase = 'top_pause';
+            phaseElapsed = 0;
+            animId = requestAnimationFrame(step);
+            return;
+          }
+          return;
+        }
+        animId = requestAnimationFrame(step);
+        return;
+      }
+    };
+
+    animId = requestAnimationFrame(step);
+
+    return () => {
+      if (animId !== null) {
+        cancelAnimationFrame(animId);
+      }
+    };
+  }, [activeIndex, total, intervalMs, loading]);
 
   const currentComp = competitions[activeIndex];
 
@@ -261,9 +452,11 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) setIsPaused(false);
       }}
+      onTouchStart={() => setIsPaused(true)}
+      onTouchEnd={() => setIsPaused(false)}
     >
       {/* HLAVNÍ BOX SLIDESHOW */}
-      <div className="relative flex flex-col justify-between overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 p-6 md:p-7 shadow-sm aspect-[8/5] min-h-[320px]">
+      <div className="relative flex flex-col justify-between overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 p-5 md:p-6 shadow-sm min-h-[320px] md:aspect-[8/5] md:min-h-[345px]">
         {loading ? (
           <div className="flex h-full flex-col justify-between animate-pulse">
             <div className="flex justify-between items-center">
@@ -331,14 +524,17 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
             </div>
 
             {/* SEZNAM VÝSLEDKŮ TANEČNÍCH PÁRŮ */}
-            <div className="my-3 space-y-2 overflow-y-auto max-h-[140px] pr-1">
+            <div
+              ref={scrollContainerRef}
+              className="my-2.5 space-y-2 overflow-y-auto max-h-[160px] pr-1"
+            >
               {currentComp.results.map((res) => (
                 <div
                   key={res.id}
                   className="flex items-center justify-between gap-3 rounded border border-neutral-200/80 bg-white px-3 py-2 text-sm shadow-2xs"
                 >
                   <span
-                    className="font-semibold text-neutral-800 truncate"
+                    className="font-semibold text-neutral-800 truncate min-w-0"
                     title={res.dancer2 ? `${res.dancer1} & ${res.dancer2}` : `${res.dancer1} (Sólo)`}
                   >
                     {res.dancer1}
@@ -364,7 +560,7 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
               ))}
             </div>
 
-            {/* DOLNÍ ODKAZ & POČÍTADLO */}
+            {/* DOLNÍ ODKAZ & POČÍTADLO S ŠIPKAMI */}
             <div className="pt-2 border-t border-neutral-200/80 flex items-center justify-between">
               <Link
                 to="/klub/vysledky-soutezi"
@@ -373,7 +569,7 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
                 Kompletní výsledky soutěží ›
               </Link>
 
-              {/* ČÍSLOVÁNÍ SLIDŮ (POKUD JE VÍCE SOUTĚŽÍ) */}
+              {/* ČÍSLOVÁNÍ SLIDŮ */}
               {total > 1 && (
                 <span className="text-[11px] font-mono text-neutral-400">
                   Soutěž {activeIndex + 1} z {total}
@@ -382,48 +578,46 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
             </div>
           </>
         )}
-
-        {/* NAVIGAČNÍ ŠIPKY (POKUD JE VÍCE NEŽ 1 SOUTĚŽ) */}
-        {total > 1 && (
-          <>
-            <button
-              type="button"
-              aria-label="Předchozí soutěž"
-              onClick={goPrev}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md transition hover:bg-white hover:scale-105 cursor-pointer border border-neutral-200"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              aria-label="Další soutěž"
-              onClick={goNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md transition hover:bg-white hover:scale-105 cursor-pointer border border-neutral-200"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
-          </>
-        )}
       </div>
 
-      {/* INDIKAČNÍ TEČKY POD SLIDESHOW */}
+      {/* INDIKAČNÍ TEČKY POD SLIDESHOW S ŠIPKAMI */}
       {total > 1 && (
-        <div className="mt-3 flex justify-center gap-1.5">
-          {competitions.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => goTo(i)}
-              aria-label={`Přejít na soutěž ${i + 1}`}
-              className={`h-2 rounded-full transition-all cursor-pointer ${
-                i === activeIndex ? 'w-6 bg-neutral-800' : 'w-2 bg-neutral-300 hover:bg-neutral-400'
-              }`}
-            />
-          ))}
+        <div className="mt-3 flex items-center justify-center gap-2.5">
+          <button
+            type="button"
+            aria-label="Předchozí soutěž"
+            onClick={goPrev}
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-neutral-600 border border-neutral-300 shadow-2xs hover:bg-neutral-100 hover:scale-105 transition cursor-pointer"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+
+          <div className="flex gap-1.5">
+            {competitions.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => goTo(i)}
+                aria-label={`Přejít na soutěž ${i + 1}`}
+                className={`h-2 rounded-full transition-all cursor-pointer ${
+                  i === activeIndex ? 'w-6 bg-neutral-800' : 'w-2 bg-neutral-300 hover:bg-neutral-400'
+                }`}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            aria-label="Další soutěž"
+            onClick={goNext}
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-neutral-600 border border-neutral-300 shadow-2xs hover:bg-neutral-100 hover:scale-105 transition cursor-pointer"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
         </div>
       )}
     </div>

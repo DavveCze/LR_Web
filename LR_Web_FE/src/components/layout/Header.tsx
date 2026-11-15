@@ -101,7 +101,7 @@ export const Header: FC<HeaderProps> = ({
     location.pathname.startsWith("/dashboard");
 
   const resolvedMobileFontSize =
-    mobileFontSize ?? desktopFontSize * mobileFontRatio;
+    mobileFontSize ?? 15;
 
   const navTextClass = isHomePage ? "text-white" : "text-neutral-900";
   const navMutedTextClass = isHomePage ? "text-white/90" : "text-neutral-800";
@@ -388,7 +388,7 @@ export const Header: FC<HeaderProps> = ({
                       <Link
                         to={item.href}
                         onClick={closeMobileMenu}
-                        className={`flex-1 py-3 text-left transition-[color,font-size] duration-200 ${
+                        className={`flex-1 py-3.5 text-left transition-[color,font-size] duration-200 ${
                           isActive
                             ? isHomePage
                               ? "font-semibold text-white"
@@ -440,7 +440,7 @@ export const Header: FC<HeaderProps> = ({
                               <Link
                                 to={child.href}
                                 onClick={closeMobileMenu}
-                                className={`block py-2 pl-4 normal-case tracking-normal transition-colors ${
+                                className={`block py-2.5 pl-4 normal-case tracking-normal transition-colors text-sm ${
                                   isChildActive
                                     ? isHomePage
                                       ? "font-semibold text-white"
@@ -467,7 +467,7 @@ export const Header: FC<HeaderProps> = ({
                   <Link
                     to={item.href}
                     onClick={closeMobileMenu}
-                    className={`block py-3 transition-[color,font-size] duration-200 ${
+                    className={`block py-3.5 transition-[color,font-size] duration-200 ${
                       isActive
                         ? isHomePage
                           ? "font-semibold text-white"

@@ -18,6 +18,7 @@ type Dancer = {
   finals_stt?: number;
   csts_idt?: number | null;
   csts_synced_at?: string | null;
+  sex?: "M" | "F";
   is_active: boolean;
   is_public: boolean;
   display_order: number;
@@ -41,8 +42,10 @@ type DancePair = {
   display_order: number;
   dancer1_name: string;
   dancer1_surname: string;
+  dancer1_sex?: "M" | "F";
   dancer2_name: string | null;
   dancer2_surname: string | null;
+  dancer2_sex?: "M" | "F";
 };
 
 type CompetitionResult = {
@@ -52,6 +55,7 @@ type CompetitionResult = {
   date: string;
   location: string;
   placement: string;
+  created_at?: string | null;
   dancer1: string;
   dancer2: string | null;
 };
@@ -67,6 +71,7 @@ type DancerForm = {
   csts_idt: string;
   name: string;
   surname: string;
+  sex: "M" | "F";
   category_lat: Category;
   points_lat: number;
   finals_lat: number;
@@ -109,6 +114,7 @@ const EMPTY_DANCER: DancerForm = {
   csts_idt: "",
   name: "",
   surname: "",
+  sex: "M",
   category_lat: "",
   points_lat: 0,
   finals_lat: 0,
@@ -161,6 +167,22 @@ function getPairLabel(pair: DancePair): string {
     return `${pair.dancer1_name} ${pair.dancer1_surname} (Sólo)`;
   }
   return `${pair.dancer1_name} ${pair.dancer1_surname} & ${pair.dancer2_name} ${pair.dancer2_surname}`;
+}
+
+export function normalizePlacementInput(input: string): string {
+  if (!input) return "";
+  const trimmed = input.trim();
+  if (!trimmed) return "";
+  const matches = trimmed.match(/\d+/g);
+  if (!matches || matches.length === 0) return trimmed;
+  const nums = matches.map((m) => parseInt(m, 10)).filter((n) => n > 0);
+  if (nums.length === 0) return trimmed;
+  nums.sort((a, b) => a - b);
+  if (nums.length === 1) return `${nums[0]}. místo`;
+  if (nums.length === 2) return `${nums[0]}. a ${nums[1]}. místo`;
+  const allButLast = nums.slice(0, -1).map((n) => `${n}.`).join(" ");
+  const last = nums[nums.length - 1];
+  return `${allButLast} a ${last}. místo`;
 }
 
 function StatusBadge({
@@ -351,6 +373,7 @@ export function DanceAdminPanel() {
         ...prev,
         name: a.name || prev.name,
         surname: a.surname || prev.surname,
+        sex: (a.sex as "M" | "F") || prev.sex,
         category_lat: (a.category_lat as Category) || prev.category_lat,
         points_lat: a.points_lat ?? prev.points_lat,
         finals_lat: a.finals_lat ?? prev.finals_lat,
@@ -488,7 +511,7 @@ export function DanceAdminPanel() {
       location: resultForm.location,
       entries: validEntries.map((e) => ({
         pair_id: Number(e.pair_id),
-        placement: e.placement.trim(),
+        placement: normalizePlacementInput(e.placement) || e.placement.trim(),
       })),
     });
 
@@ -535,6 +558,7 @@ export function DanceAdminPanel() {
       csts_idt: dancer.csts_idt ? String(dancer.csts_idt) : "",
       name: dancer.name,
       surname: dancer.surname,
+      sex: dancer.sex ?? "M",
       category_lat: dancer.category_lat ?? "",
       points_lat: dancer.points_lat ?? 0,
       finals_lat: dancer.finals_lat ?? 0,
@@ -809,6 +833,20 @@ export function DanceAdminPanel() {
             </label>
 
             <label className="text-sm font-medium text-neutral-700">
+              Pohlaví *
+              <select
+                value={dancerForm.sex}
+                onChange={(event) =>
+                  updateDancerForm("sex", event.target.value as "M" | "F")
+                }
+                className="mt-1 w-full rounded border border-neutral-300 bg-white p-2"
+              >
+                <option value="M">Muž (Partner)</option>
+                <option value="F">Žena (Partnerka)</option>
+              </select>
+            </label>
+
+            <label className="text-sm font-medium text-neutral-700">
               Třída LAT
               <select
                 value={dancerForm.category_lat}
@@ -980,6 +1018,9 @@ export function DanceAdminPanel() {
                   >
                     <td className="px-3 py-3 font-medium text-neutral-900">
                       {dancer.name} {dancer.surname}
+                      <span className="ml-1.5 rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-600 border border-neutral-200">
+                        {dancer.sex === "F" ? "Žena" : "Muž"}
+                      </span>
                     </td>
                     <td className="px-3 py-3 font-mono text-xs text-neutral-600">
                       {dancer.csts_idt ? (
@@ -1081,7 +1122,7 @@ export function DanceAdminPanel() {
             {!pairForm.pair_id && (
               <>
                 <label className="text-sm font-medium text-neutral-700">
-                  Tanečník (nebo 1. v páru) *
+                  Tanečník (Partner / Muž) *
                   <select
                     required
                     value={pairForm.idt1}
@@ -1090,18 +1131,18 @@ export function DanceAdminPanel() {
                     }
                     className="mt-1 w-full rounded border border-neutral-300 bg-white p-2"
                   >
-                    <option value="">Vyber tanečníka</option>
+                    <option value="">Vyber partnera (muže)</option>
 
                     {availablePairDancers.map((dancer) => (
                       <option key={dancer.idt} value={dancer.idt}>
-                        {dancer.name} {dancer.surname}
+                        {dancer.name} {dancer.surname} ({dancer.sex === "F" ? "Ž" : "M"})
                       </option>
                     ))}
                   </select>
                 </label>
 
                 <label className="text-sm font-medium text-neutral-700">
-                  Druhý tanečník v páru
+                  Partnerka (Žena / nebo prázdné pro sólo)
                   <select
                     value={pairForm.idt2}
                     onChange={(event) =>
@@ -1109,7 +1150,7 @@ export function DanceAdminPanel() {
                     }
                     className="mt-1 w-full rounded border border-neutral-300 bg-white p-2"
                   >
-                    <option value="">(Žádný — Sólo tanečník)</option>
+                    <option value="">(Žádná — Sólo tanečník)</option>
 
                     {availablePairDancers
                       .filter(
@@ -1117,7 +1158,7 @@ export function DanceAdminPanel() {
                       )
                       .map((dancer) => (
                         <option key={dancer.idt} value={dancer.idt}>
-                          {dancer.name} {dancer.surname}
+                          {dancer.name} {dancer.surname} ({dancer.sex === "F" ? "Ž" : "M"})
                         </option>
                       ))}
                   </select>
@@ -1465,17 +1506,16 @@ export function DanceAdminPanel() {
                     </label>
 
                     <label className="text-xs font-medium text-neutral-700">
-                      Umístění (např. 1. místo nebo 1. 2. a 2. místo) *
+                      Umístění (např. 1. nebo 1. 2. 8. 1.) *
                       <input
                         required
                         value={entry.placement}
                         onChange={(e) =>
                           updateResultEntry(index, "placement", e.target.value)
                         }
-                        placeholder="Např. 1. místo"
+                        placeholder="Např. 1. nebo 1. 2. 8. 1."
                         className="mt-1 w-full rounded border border-neutral-300 bg-white p-2 text-sm"
-                      >
-                      </input>
+                      />
                     </label>
 
                     <div className="flex justify-end pb-1">

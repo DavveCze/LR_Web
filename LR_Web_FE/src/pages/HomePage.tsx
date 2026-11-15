@@ -1,4 +1,5 @@
 import { useEffect, useState, type FC } from "react";
+import { Link } from "react-router-dom";
 import { HelperImage, HelperBackgroundSection } from "../components/ui/HelperImage";
 import { CompetitionResultsSlideshow } from "../components/ui/CompetitionResultsSlideshow";
 import { HomeButton } from "../components/ui/HomeButton";
@@ -38,10 +39,10 @@ export const HomePage: FC = () => {
         overlayClassName="bg-black/40"
       >
         <div className="relative z-10 max-w-7xl">
-          <h1 className="border-t border-b border-white/70 py-4 text-3xl font-light uppercase tracking-wide text-white md:text-6xl">
+          <h1 className="border-t border-b border-white/70 py-4 text-2xl font-light uppercase tracking-wide text-white sm:text-3xl md:text-6xl">
             Taneční klub LR DANCE TEAM OSTRAVA
           </h1>
-          <h2 className="mt-6 text-2xl font-light uppercase tracking-wide text-white md:text-5xl">
+          <h2 className="mt-4 sm:mt-6 text-xl font-light uppercase tracking-wide text-white sm:text-2xl md:text-5xl">
             Taneční škola CARMEN
           </h2>
         </div>
@@ -52,46 +53,86 @@ export const HomePage: FC = () => {
         <div className="border-t border-neutral-300" />
       </div>
 
-      {/* AKTUÁLNÍ DĚNÍ — text vlevo, slideshow výsledků soutěží vpravo */}
-      <section className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-16 md:grid-cols-2">
-        <div>
-          <h3 className="mb-4 flex items-center gap-2 text-xl font-semibold text-neutral-900">
-            <span className="text-[#939393]">›</span> Aktuální dění
+      {/* AKTUÁLNÍ DĚNÍ — sjednocené záhlaví uprostřed, 2 bloky vedle sebe */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        {/* SJEDNOCENÉ ZÁHLAVÍ UPROSTŘED */}
+        <div className="mb-8 text-center">
+          <h3 className="text-2xl md:text-3xl font-semibold text-neutral-900 tracking-tight">
+            Aktuální dění
           </h3>
-
-          {/* SPECIÁLNÍ BOX K AKTUÁLNÍMU DĚNÍ (nejnovější titulek s proklikem) */}
-          {latestNews ? (
-            <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-5 shadow-sm transition hover:border-neutral-400">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-neutral-500 mb-2">
-                <span className="bg-neutral-200 text-neutral-800 px-2 py-0.5 rounded text-[11px] font-bold">
-                  Nejnovější aktualita
-                </span>
-                <time>{new Date(latestNews.date).toLocaleDateString("cs-CZ")}</time>
-              </div>
-              <a
-                href={`/aktuality#article-${latestNews.id}`}
-                className="group block"
-              >
-                <h4 className="text-lg md:text-xl font-bold text-neutral-900 group-hover:text-blue-700 transition-colors line-clamp-2">
-                  {latestNews.headline}
-                </h4>
-                <p className="mt-2 text-sm text-neutral-600 line-clamp-2 leading-relaxed font-light">
-                  {latestNews.text}
-                </p>
-                <span className="mt-3 inline-flex items-center text-xs font-semibold text-neutral-900 group-hover:underline">
-                  Zobrazit podrobnější informace ›
-                </span>
-              </a>
-            </div>
-          ) : (
-            <p className="text-neutral-700">
-              Snažíme se stránky udržovat, proto je dobré sledovat aktuality.
-            </p>
-          )}
         </div>
 
-        {/* Výsledky soutěží za poslední víkend ve slideshow */}
-        <CompetitionResultsSlideshow className="w-full" />
+        {/* 2 SJEDNOCENÉ BLOKY VEDLE SEBE */}
+        <div className="grid grid-cols-1 items-start gap-8 md:gap-10 md:grid-cols-2">
+          {/* LEVÝ BLOK: NEJNOVĚJŠÍ AKTUALITA */}
+          {latestNews ? (
+            <div className="relative flex flex-col justify-between overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 p-5 md:p-6 shadow-sm min-h-[320px] md:aspect-[8/5] md:min-h-[345px] transition hover:border-neutral-400">
+              <Link
+                to={`/aktuality#article-${latestNews.id}`}
+                className="group flex flex-col justify-between h-full"
+              >
+                <div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-wider text-neutral-500">
+                    <span className="inline-flex items-center gap-1.5 rounded bg-neutral-200 px-2 py-0.5 text-[11px] font-bold text-neutral-800">
+                      Nejnovější aktualita
+                    </span>
+                    <time className="font-semibold text-neutral-600">
+                      {new Date(latestNews.date).toLocaleDateString("cs-CZ")}
+                    </time>
+                  </div>
+
+                  <p className="mt-1 text-[11px] text-neutral-500 italic">
+                    Zprávy z klubu a taneční školy CARMEN:
+                  </p>
+
+                  <h4 className="mt-2.5 text-xl md:text-2xl font-bold text-neutral-900 tracking-tight line-clamp-2 group-hover:text-neutral-700 transition-colors">
+                    {latestNews.headline}
+                  </h4>
+
+                  <p className="mt-3 text-sm md:text-base text-neutral-600 font-light leading-relaxed line-clamp-3">
+                    {latestNews.text}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-neutral-200/80 flex items-center justify-between">
+                  <span className="inline-flex items-center text-xs font-semibold text-neutral-900 group-hover:underline">
+                    Zobrazit podrobnější informace ›
+                  </span>
+                  <span className="text-[11px] font-mono text-neutral-400">
+                    Přečíst článek
+                  </span>
+                </div>
+              </Link>
+            </div>
+          ) : (
+            <div className="relative flex flex-col justify-between overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 p-5 md:p-6 shadow-sm min-h-[320px] md:aspect-[8/5] md:min-h-[345px]">
+              <div>
+                <div className="flex items-center justify-between text-xs uppercase tracking-wider text-neutral-500">
+                  <span className="inline-flex items-center gap-1.5 rounded bg-neutral-200 px-2 py-0.5 text-[11px] font-bold text-neutral-800">
+                    Aktuality
+                  </span>
+                </div>
+                <h4 className="mt-2.5 text-xl md:text-2xl font-bold text-neutral-900 tracking-tight">
+                  Aktuální dění v klubu
+                </h4>
+                <p className="mt-3 text-sm md:text-base text-neutral-600 font-light leading-relaxed">
+                  Sledujte pravidelně naše aktuality, ať vám neuniknou žádné důležité informace o trénincích, soustředěních a akcích klubu.
+                </p>
+              </div>
+              <div className="pt-2 border-t border-neutral-200/80 flex items-center justify-between">
+                <Link
+                  to="/aktuality"
+                  className="inline-flex items-center text-xs font-semibold text-neutral-900 hover:underline"
+                >
+                  Přejít na aktuality ›
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* PRAVÝ BLOK: VÝSLEDKY SOUTĚŽÍ (SLIDESHOW) */}
+          <CompetitionResultsSlideshow className="w-full" />
+        </div>
       </section>
 
       {/* PROFESIONÁLNÍ TANEČNÍ KLUB — parallax pruh přes helper */}

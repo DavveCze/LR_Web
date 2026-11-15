@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 
 export const Footer: FC = () => {
   return (
-    <footer className="border-t border-neutral-200 bg-neutral-900 py-16 text-neutral-400 font-sans">
-      <div className="mx-auto max-w-6xl px-6">
+    <footer className="border-t border-neutral-200 bg-neutral-900 py-10 sm:py-16 text-neutral-400 font-sans">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           {/* IDENTIFIKACE SPOLKU */}
           <div className="md:col-span-2 space-y-3">
@@ -69,8 +69,8 @@ export const Footer: FC = () => {
             <div className="space-y-2 text-xs">
               <p>
                 <strong>E-mail:</strong>{" "}
-                <a href="mailto:cep.lukas@seznam.cz" className="hover:text-white underline">
-                  cep.lukas@seznam.cz
+                <a href="mailto:l.cep82@gmail.com" className="hover:text-white underline">
+                  l.cep82@gmail.com
                 </a>
               </p>
               <p>

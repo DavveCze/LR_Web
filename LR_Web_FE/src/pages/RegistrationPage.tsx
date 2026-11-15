@@ -97,9 +97,12 @@ export const RegistrationPage: React.FC = () => {
       <PageHeader title="Přihláška" />
       <main className="w-full bg-white font-sans text-neutral-800 pt-6 pb-24">
         <div className="mx-auto max-w-5xl px-6 py-6">
-          <p className="mb-12 text-lg text-neutral-600 font-light leading-relaxed">
+          <p className="text-neutral-700 leading-relaxed text-base md:text-lg font-light mb-8">
             Vyberte si níže vypsaný kurz nebo tábor. Přihlášení probíhá výhradně přes náš oficiální informační systém.
           </p>
+
+          {/* DĚLÍCÍ ČÁRA ODDĚLUJÍCÍ NADPIS A SEKCE PŘIHLÁŠEK */}
+          <div className="border-t border-neutral-300 mb-8 sm:mb-12" />
 
         {/* SEZNAM KATEGORIÍ A PŘIHLÁŠEK PŘES IS.POHODLNE.INFO */}
         {categories.length === 0 ? (

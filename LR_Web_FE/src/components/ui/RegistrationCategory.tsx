@@ -26,8 +26,8 @@ export const RegistrationCategory: React.FC<RegistrationCategoryProps> = ({
   }
 
   return (
-    <section className="mb-16 [&:first-child]:py-20 max-w-[920px] sm:mx-auto">
-      <h2 className="border-[#d7d7d7] py-8 text-center text-[30px] font-bold leading-tight text-[#373737] sm:text-[34px]">
+    <section className="mb-16 max-w-[920px] sm:mx-auto">
+      <h2 className="py-5 sm:py-8 text-center text-2xl sm:text-[34px] font-bold leading-tight text-neutral-800">
         {headline}
       </h2>
 

@@ -195,7 +195,7 @@ export const CarmenPage: React.FC = () => {
             <section className="space-y-10">
 
             {/* ODSTAVCE S CHEVRONEM › A ZVÝRAZNĚNÝM TEXTEM */}
-            <div className="space-y-6 text-[18px] md:text-[20px] font-light leading-[1.6] text-neutral-600">
+            <div className="space-y-6 text-base md:text-[20px] font-light leading-[1.6] text-neutral-600">
               {content.overview.bullets.map((bullet, idx) => (
                 <div key={idx} className="grid grid-cols-[20px_1fr] gap-x-4 items-start">
                   <span
@@ -252,15 +252,13 @@ export const CarmenPage: React.FC = () => {
         {/* 2. ZÁLOŽKA: SPACÍ TÁBOR */}
         {activeTab === "tabor" && (
           <section className="space-y-8">
-            <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wider text-neutral-900 border-b-2 border-neutral-900 pb-2 inline-block">
-              {content.tabor.title}
-            </h1>
-
             {/* HORNÍ TLAČÍTKO REGISTRACE */}
-            <div className="flex justify-start">
+            <div className="flex justify-center">
               <DarkButton
                 href={content.tabor.registrationUrl}
-                className="px-8 py-3 uppercase tracking-wider font-bold text-sm"
+                isBig
+                isCentered
+                className="uppercase tracking-wider font-bold"
               >
                 REGISTRACE
               </DarkButton>
@@ -277,7 +275,7 @@ export const CarmenPage: React.FC = () => {
             </div>
 
             {/* POPIS A INFORMACE */}
-            <div className="space-y-4 text-[18px] md:text-[19px] font-light leading-[1.6] text-neutral-600 pt-4">
+            <div className="space-y-4 text-base md:text-[19px] font-light leading-[1.6] text-neutral-600 pt-4">
               {content.tabor.paragraphs.map((p, idx) => (
                 <div key={idx} className="grid grid-cols-[20px_1fr] gap-x-4 items-start">
                   <span aria-hidden="true" className="text-[24px] font-light leading-none text-neutral-400 select-none pt-0.5">
@@ -307,10 +305,12 @@ export const CarmenPage: React.FC = () => {
             </div>
 
             {/* DOLNÍ TLAČÍTKO REGISTRACE */}
-            <div className="flex justify-start pt-4">
+            <div className="flex justify-center pt-4">
               <DarkButton
                 href={content.tabor.registrationUrl}
-                className="px-8 py-3 uppercase tracking-wider font-bold text-sm"
+                isBig
+                isCentered
+                className="uppercase tracking-wider font-bold"
               >
                 REGISTRACE
               </DarkButton>
@@ -321,22 +321,20 @@ export const CarmenPage: React.FC = () => {
         {/* 3. ZÁLOŽKA: PŘÍMĚSTSKÝ TÁBOR */}
         {activeTab === "primestsky" && (
           <section className="space-y-8">
-            <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wider text-neutral-900 border-b-2 border-neutral-900 pb-2 inline-block">
-              {content.primestsky.title}
-            </h1>
-
             {/* DVĚ TLAČÍTKA REGISTRACE (ČERVENEC & SRPEN) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mx-auto w-full">
               <DarkButton
                 href={content.primestsky.julyUrl}
-                isFlexible
+                isBig
+                isCentered
                 className="uppercase tracking-wider font-bold"
               >
                 REGISTRACE (ČERVENEC)
               </DarkButton>
               <DarkButton
                 href={content.primestsky.augustUrl}
-                isFlexible
+                isBig
+                isCentered
                 className="uppercase tracking-wider font-bold"
               >
                 REGISTRACE (SRPEN)
@@ -354,7 +352,7 @@ export const CarmenPage: React.FC = () => {
             </div>
 
             {/* POPIS A INFORMACE */}
-            <div className="space-y-4 text-[18px] md:text-[19px] font-light leading-[1.6] text-neutral-600 pt-4">
+            <div className="space-y-4 text-base md:text-[19px] font-light leading-[1.6] text-neutral-600 pt-4">
               {content.primestsky.paragraphs.map((p, idx) => (
                 <div key={idx} className="grid grid-cols-[20px_1fr] gap-x-4 items-start">
                   <span aria-hidden="true" className="text-[24px] font-light leading-none text-neutral-400 select-none pt-0.5">
@@ -384,17 +382,19 @@ export const CarmenPage: React.FC = () => {
             </div>
 
             {/* DOLNÍ TLAČÍTKA REGISTRACE */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl pt-4">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mx-auto w-full pt-4">
               <DarkButton
                 href={content.primestsky.julyUrl}
-                isFlexible
+                isBig
+                isCentered
                 className="uppercase tracking-wider font-bold"
               >
                 REGISTRACE (ČERVENEC)
               </DarkButton>
               <DarkButton
                 href={content.primestsky.augustUrl}
-                isFlexible
+                isBig
+                isCentered
                 className="uppercase tracking-wider font-bold"
               >
                 REGISTRACE (SRPEN)
@@ -406,9 +406,17 @@ export const CarmenPage: React.FC = () => {
         {/* 4. ZÁLOŽKA: TANEČNÍ VÍKEND */}
         {activeTab === "vikend" && (
           <section className="space-y-8">
-            <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wider text-neutral-900 border-b-2 border-neutral-900 pb-2 inline-block">
-              {content.vikend.title}
-            </h1>
+            {/* HORNÍ TLAČÍTKO REGISTRACE */}
+            <div className="flex justify-center">
+              <DarkButton
+                href={content.vikend.registrationUrl}
+                isBig
+                isCentered
+                className="uppercase tracking-wider font-bold"
+              >
+                REGISTRACE
+              </DarkButton>
+            </div>
 
             {/* FOTOGRAFIE / PLAKÁT VÍKENDU */}
             <div className="overflow-hidden border border-neutral-200 bg-neutral-50 shadow-xs max-w-3xl mx-auto">
@@ -421,7 +429,7 @@ export const CarmenPage: React.FC = () => {
             </div>
 
             {/* TEXTOVÝ OBSAH */}
-            <div className="space-y-4 text-[18px] md:text-[19px] font-light leading-[1.6] text-neutral-600">
+            <div className="space-y-4 text-base md:text-[19px] font-light leading-[1.6] text-neutral-600">
               {content.vikend.paragraphs.map((p, idx) => (
                 <div key={idx} className="grid grid-cols-[20px_1fr] gap-x-4 items-start">
                   <span aria-hidden="true" className="text-[24px] font-light leading-none text-neutral-400 select-none pt-0.5">
@@ -450,11 +458,13 @@ export const CarmenPage: React.FC = () => {
               </div>
             </div>
 
-            {/* TLAČÍTKO REGISTRACE */}
-            <div className="flex justify-start pt-4">
+            {/* DOLNÍ TLAČÍTKO REGISTRACE */}
+            <div className="flex justify-center pt-4">
               <DarkButton
                 href={content.vikend.registrationUrl}
-                className="px-8 py-3 uppercase tracking-wider font-bold text-sm"
+                isBig
+                isCentered
+                className="uppercase tracking-wider font-bold"
               >
                 REGISTRACE
               </DarkButton>

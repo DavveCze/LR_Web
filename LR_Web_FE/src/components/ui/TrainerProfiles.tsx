@@ -66,9 +66,9 @@ export const TrainerProfileLarge: React.FC<TrainerProps> = ({
   image_src 
 }) => {
   return (
-    <div className="flex flex-col md:flex-row gap-8 items-start py-8 border-b border-gray-200 last:border-b-0">
+    <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start py-8 border-b border-gray-200 last:border-b-0">
       {image_src && (
-        <div className="w-full md:w-64 h-auto shrink-0">
+        <div className="w-full max-w-sm mx-auto md:mx-0 md:w-64 h-auto shrink-0">
           <HelperImage
             baseName={image_src}
             pageFolder={path}
@@ -78,8 +78,8 @@ export const TrainerProfileLarge: React.FC<TrainerProps> = ({
         </div>
       )}
       <div className="flex-1">
-        <h2 className="text-3xl md:text-4xl font-semibold text-gray-800 mb-4">{full_name}</h2>
-        <p className="text-gray-600 leading-relaxed font-light">
+        <h2 className="text-2xl md:text-4xl font-semibold text-gray-800 mb-3 md:mb-4">{full_name}</h2>
+        <p className="text-base text-gray-600 leading-relaxed font-light">
           {info || title}
         </p>
       </div>

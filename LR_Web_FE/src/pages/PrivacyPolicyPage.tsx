@@ -25,7 +25,7 @@ export const PrivacyPolicyPage: React.FC = () => {
               <p><strong>IČO:</strong> 65889758</p>
               <p><strong>Sídlo:</strong> Čkalovova 942/2, 708 00 Ostrava – Poruba, Česká republika</p>
               <p><strong>Zápis v rejstříku:</strong> Krajský soud v Ostravě, oddíl L, vložka 3782</p>
-              <p><strong>E-mail:</strong> <a href="mailto:cep.lukas@seznam.cz" className="underline">cep.lukas@seznam.cz</a></p>
+              <p><strong>E-mail:</strong> <a href="mailto:l.cep82@gmail.com" className="underline">l.cep82@gmail.com</a></p>
               <p><strong>Telefon:</strong> <a href="tel:+420728145154" className="underline">+420 728 145 154</a></p>
             </div>
           </section>

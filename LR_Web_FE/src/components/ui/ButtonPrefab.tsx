@@ -62,7 +62,7 @@ export const LightButton = ({
 
     const classes = `inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold cursor-pointer ${
         isBig
-            ? "w-1/3 h-16 text-xl"
+            ? "w-full sm:w-auto sm:min-w-[280px] h-16 text-lg sm:text-xl px-8"
             : isMedium
             ? "w-1/5 h-14 text-xl"
             : isFlexible
@@ -154,7 +154,7 @@ export const DarkButton = ({
 
     const classes = `inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold cursor-pointer ${
         isBig
-            ? "w-1/3 h-16 text-xl"
+            ? "w-full sm:w-auto sm:min-w-[280px] h-16 text-lg sm:text-xl px-8"
             : isMedium
             ? "w-1/5 h-14 text-xl"
             : isFlexible

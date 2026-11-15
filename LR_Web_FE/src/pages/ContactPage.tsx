@@ -51,17 +51,17 @@ export const ContactPage: React.FC = () => {
     <div>
       <PageHeader title="Kontakt" />
       <main className="w-full bg-white font-sans text-neutral-800 pt-6 pb-24">
-        <div className="mx-auto max-w-5xl px-6 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* LEVÝ SLOUPCE: KDE TRÉNUJEME, KONTAKTY, BANKA */}
-          <div className="lg:col-span-7 space-y-12">
+          <div className="lg:col-span-7 space-y-10 lg:space-y-12">
             {/* KDE TRÉNUJEME */}
             <div>
               <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-neutral-900">
                 Kde trénujeme
               </h2>
 
-              <div className="space-y-4 text-[19px] font-light leading-[1.6] text-neutral-600 md:text-[20px]">
+              <div className="space-y-4 text-base md:text-[20px] font-light leading-[1.6] text-neutral-600">
                 <div className="grid grid-cols-[22px_1fr] gap-x-5">
                   <span aria-hidden="true" className="pt-[1px] text-[27px] font-light leading-[1.35] text-neutral-500">
                     ›
@@ -120,8 +120,8 @@ export const ContactPage: React.FC = () => {
                     </p>
                     <p>
                       <strong className="font-medium text-neutral-900">E-mail:</strong>{" "}
-                      <a href="mailto:cep.lukas@seznam.cz" className="hover:underline text-neutral-900">
-                        cep.lukas@seznam.cz
+                      <a href="mailto:l.cep82@gmail.com" className="hover:underline text-neutral-900">
+                        l.cep82@gmail.com
                       </a>
                     </p>
                   </div>
@@ -162,29 +162,29 @@ export const ContactPage: React.FC = () => {
               </h2>
 
               <div className="space-y-px border-t border-b border-gray-300">
-                <div className="grid grid-cols-2 gap-4 py-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 py-3">
                   <div className="text-sm font-semibold text-gray-800">Název spolku</div>
-                  <div className="text-sm font-normal text-gray-700 text-right">Spolek LR Cosmetic dance team, z. s.</div>
+                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">Spolek LR Cosmetic dance team, z. s.</div>
                 </div>
                 <div className="border-t border-gray-200" />
-                <div className="grid grid-cols-2 gap-4 py-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 py-3">
                   <div className="text-sm font-semibold text-gray-800">Sídlo</div>
-                  <div className="text-sm font-normal text-gray-700 text-right">Čkalovova 942/2, 708 00 Ostrava – Poruba</div>
+                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">Čkalovova 942/2, 708 00 Ostrava – Poruba</div>
                 </div>
                 <div className="border-t border-gray-200" />
-                <div className="grid grid-cols-2 gap-4 py-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 py-3">
                   <div className="text-sm font-semibold text-gray-800">IČO</div>
-                  <div className="text-sm font-normal text-gray-700 text-right">65889758</div>
+                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">65889758</div>
                 </div>
                 <div className="border-t border-gray-200" />
-                <div className="grid grid-cols-2 gap-4 py-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 py-3">
                   <div className="text-sm font-semibold text-gray-800">Číslo účtu</div>
-                  <div className="text-sm font-normal text-gray-700 text-right">1012808781 / 5500 (Raiffeisenbank)</div>
+                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">1012808781 / 5500 (Raiffeisenbank)</div>
                 </div>
                 <div className="border-t border-gray-200" />
-                <div className="grid grid-cols-2 gap-4 py-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 py-3">
                   <div className="text-sm font-semibold text-gray-800">Variabilní symbol</div>
-                  <div className="text-sm font-normal text-gray-700 text-right">Rodné číslo účastníka</div>
+                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">Rodné číslo účastníka</div>
                 </div>
               </div>
             </div>
@@ -192,7 +192,7 @@ export const ContactPage: React.FC = () => {
 
           {/* PRAVÝ SLOUPCE: KONTAKTNÍ FORMULÁŘ */}
           <div className="lg:col-span-5">
-            <div className="border border-neutral-200 bg-white p-8">
+            <div className="border border-neutral-200 bg-white p-5 sm:p-8">
               <h2 className="text-xl font-bold uppercase tracking-wider text-neutral-900 border-b border-neutral-200 pb-3">
                 Napište nám
               </h2>

@@ -47,8 +47,8 @@ export const ClubTrainersPage: React.FC = () => {
         )}
 
         {largeTrainers.length > 0 && (
-          <section className="mt-12">
-            <div className="flex flex-col gap-4 border-t border-gray-200 pt-8">
+          <section className={smallTrainers.length > 0 ? "mt-12 border-t border-gray-200 pt-8" : ""}>
+            <div className="flex flex-col gap-4">
               {largeTrainers.map(trainer => (
                 <TrainerProfileLarge key={trainer.id} {...trainer} />
               ))}

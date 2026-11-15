@@ -10,7 +10,7 @@ export const ClubPage: React.FC = () => {
       <main className="w-full bg-white font-sans text-gray-800 py-10">
       {/* Úvodní texty */}
       <section className="max-w-5xl mx-auto px-6 py-12">
-        <div className="mx-auto max-w-4xl space-y-2 text-[20px] font-light leading-[1.6] text-neutral-500 md:text-[21px]">
+        <div className="mx-auto max-w-4xl space-y-3 text-base sm:text-lg md:text-[21px] font-light leading-[1.6] text-neutral-500">
           <p className="grid grid-cols-[22px_1fr] gap-x-5">
             <span
               aria-hidden="true"

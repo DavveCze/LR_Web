@@ -166,6 +166,8 @@ class CstsService
 
         $dancerId = null;
 
+        $dancerSex = self::inferSex($athlete['name'], $athlete['surname'], $athlete['sex'] ?? null);
+
         if ($existing) {
             $dancerId = (int) $existing['idt'];
             $updateStmt = $pdo->prepare(
@@ -173,6 +175,7 @@ class CstsService
                  SET
                     name = :name,
                     surname = :surname,
+                    sex = COALESCE(:sex, sex),
                     category_lat = COALESCE(:category_lat, category_lat),
                     category_stt = COALESCE(:category_stt, category_stt),
                     points_lat = :points_lat,
@@ -187,6 +190,7 @@ class CstsService
                 ':idt' => $dancerId,
                 ':name' => $athlete['name'] !== '' ? $athlete['name'] : $existing['name'],
                 ':surname' => $athlete['surname'] !== '' ? $athlete['surname'] : $existing['surname'],
+                ':sex' => $dancerSex,
                 ':category_lat' => $athlete['category_lat'],
                 ':category_stt' => $athlete['category_stt'],
                 ':points_lat' => $athlete['points_lat'],
@@ -200,6 +204,7 @@ class CstsService
                 'INSERT INTO dancers (
                     name,
                     surname,
+                    sex,
                     category_lat,
                     category_stt,
                     points_lat,
@@ -214,6 +219,7 @@ class CstsService
                  ) VALUES (
                     :name,
                     :surname,
+                    :sex,
                     :category_lat,
                     :category_stt,
                     :points_lat,
@@ -230,6 +236,7 @@ class CstsService
             $insertStmt->execute([
                 ':name' => $athlete['name'],
                 ':surname' => $athlete['surname'],
+                ':sex' => $dancerSex,
                 ':category_lat' => $athlete['category_lat'],
                 ':category_stt' => $athlete['category_stt'],
                 ':points_lat' => $athlete['points_lat'],
@@ -377,10 +384,13 @@ class CstsService
                     $pSurname = count($parts) > 1 ? array_pop($parts) : '';
                     $pFirstName = implode(' ', $parts);
 
+                    $fallbackSex = self::inferSex($pFirstName, $pSurname);
+
                     $fallbackStmt = $pdo->prepare(
                         'INSERT INTO dancers (
                             name,
                             surname,
+                            sex,
                             category_lat,
                             category_stt,
                             points_lat,
@@ -395,6 +405,7 @@ class CstsService
                          ) VALUES (
                             :name,
                             :surname,
+                            :sex,
                             :category_lat,
                             :category_stt,
                             :points_lat,
@@ -411,6 +422,7 @@ class CstsService
                     $fallbackStmt->execute([
                         ':name' => $pFirstName,
                         ':surname' => $pSurname,
+                        ':sex' => $fallbackSex,
                         ':category_lat' => $categoryLat,
                         ':category_stt' => $categoryStt,
                         ':points_lat' => $pointsLat,
@@ -428,8 +440,24 @@ class CstsService
             return null;
         }
 
-        $firstId = min($dancerId, $partnerDancerId);
-        $secondId = max($dancerId, $partnerDancerId);
+        // Vždy zajistíme, že v páru je muž na první pozici (idt1) a žena na druhé (idt2)
+        $sexStmt = $pdo->prepare('SELECT idt, sex FROM dancers WHERE idt IN (:id1, :id2)');
+        $sexStmt->execute([':id1' => $dancerId, ':id2' => $partnerDancerId]);
+        $sexMap = $sexStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        $sex1 = $sexMap[$dancerId] ?? 'M';
+        $sex2 = $sexMap[$partnerDancerId] ?? 'F';
+
+        if ($sex1 === 'M' && $sex2 === 'F') {
+            $firstId = $dancerId;
+            $secondId = $partnerDancerId;
+        } elseif ($sex1 === 'F' && $sex2 === 'M') {
+            $firstId = $partnerDancerId;
+            $secondId = $dancerId;
+        } else {
+            $firstId = min($dancerId, $partnerDancerId);
+            $secondId = max($dancerId, $partnerDancerId);
+        }
 
         $findPairStmt = $pdo->prepare(
             'SELECT pair_id FROM dance_pairs 
@@ -604,5 +632,40 @@ class CstsService
             'errors' => $errors,
             'synced_at' => date('Y-m-d H:i:s'),
         ];
+    }
+
+    /**
+     * Odvodí pohlaví ('M' / 'F') z explicitního parametru nebo heuristikou z českého jména a příjmení.
+     */
+    public static function inferSex(string $name, string $surname, ?string $explicitSex = null): string
+    {
+        if ($explicitSex && in_array(strtoupper($explicitSex), ['M', 'F'], true)) {
+            return strtoupper($explicitSex);
+        }
+
+        $s = mb_strtolower(trim($surname));
+        $n = mb_strtolower(trim($name));
+
+        if (
+            str_ends_with($s, 'ová') ||
+            str_ends_with($s, 'ova') ||
+            str_ends_with($s, 'á') ||
+            str_ends_with($s, 'ska') ||
+            str_ends_with($s, 'ská')
+        ) {
+            return 'F';
+        }
+
+        $femaleNames = [
+            'vanesa', 'viktorie', 'denisa', 'dominika', 'eliška', 'eliska', 'zuzana',
+            'sophie', 'kunda', 'inu', 'anna', 'marie', 'lucie', 'tereza', 'adéla',
+            'adela', 'karolína', 'karolina', 'natálie', 'natalie', 'kristýna', 'kristyna',
+            'barbora', 'nikol', 'nikola'
+        ];
+        if (in_array($n, $femaleNames, true)) {
+            return 'F';
+        }
+
+        return 'M';
     }
 }

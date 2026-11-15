@@ -184,7 +184,7 @@ export const CoursesPage: React.FC = () => {
           </div>
 
           {/* ODSTAVCE DLE CLUBPAGE DESIGNU */}
-          <div className="space-y-4 text-[20px] font-light leading-[1.6] text-neutral-500 md:text-[21px]">
+          <div className="space-y-4 text-base sm:text-lg md:text-[21px] font-light leading-[1.6] text-neutral-500">
             {selectedCategory.paragraphs.map((p, idx) => (
               <p key={idx} className="grid grid-cols-[22px_1fr] gap-x-5">
                 <span

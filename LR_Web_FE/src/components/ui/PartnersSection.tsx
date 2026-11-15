@@ -445,7 +445,7 @@ export const PartnersSection: React.FC<PartnersSectionProps> = ({
                 <img
                   src={leftLogo.logo}
                   alt={leftLogo.name}
-                  className="max-h-80 md:max-h-96 w-auto object-contain mx-auto"
+                  className="max-h-52 sm:max-h-80 md:max-h-96 w-auto object-contain mx-auto"
                   loading="lazy"
                 />
               </a>
@@ -453,7 +453,7 @@ export const PartnersSection: React.FC<PartnersSectionProps> = ({
               <img
                 src={leftLogo.logo}
                 alt={leftLogo.name}
-                className="max-h-80 md:max-h-96 w-auto object-contain mx-auto"
+                className="max-h-52 sm:max-h-80 md:max-h-96 w-auto object-contain mx-auto"
                 loading="lazy"
               />
             )}

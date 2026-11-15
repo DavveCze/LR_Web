@@ -24,7 +24,8 @@ CREATE TABLE competition_results (
     competition_name VARCHAR(255) NOT NULL,
     date DATE NOT NULL,
     location VARCHAR(255) NOT NULL,
-    placement VARCHAR(50) NOT NULL
+    placement VARCHAR(50) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE news (

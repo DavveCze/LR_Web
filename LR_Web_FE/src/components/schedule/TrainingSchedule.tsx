@@ -83,6 +83,9 @@ export function TrainingSchedule() {
 
   return (
     <section className="w-full">
+      <p className="block md:hidden text-center text-xs text-neutral-500 mb-2">
+        ← Posunutím do strany zobrazíte celý týden →
+      </p>
       <div className="overflow-x-auto pb-2">
         <div className="min-w-[1100px] border border-neutral-800 bg-white">
           <div

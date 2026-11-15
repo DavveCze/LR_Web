@@ -153,6 +153,7 @@ if ($method === 'GET') {
                 idt,
                 name,
                 surname,
+                sex,
                 category_lat,
                 category_stt,
                 points_lat,
@@ -187,8 +188,10 @@ if ($method === 'GET') {
                 p.display_order,
                 d1.name AS dancer1_name,
                 d1.surname AS dancer1_surname,
+                d1.sex AS dancer1_sex,
                 d2.name AS dancer2_name,
-                d2.surname AS dancer2_surname
+                d2.surname AS dancer2_surname,
+                d2.sex AS dancer2_sex
              FROM dance_pairs p
              JOIN dancers d1 ON d1.idt = p.idt1
              LEFT JOIN dancers d2 ON d2.idt = p.idt2
@@ -203,8 +206,13 @@ if ($method === 'GET') {
                 r.date,
                 r.location,
                 r.placement,
-                d1.name || \' \' || d1.surname AS dancer1,
-                CASE WHEN d2.idt IS NOT NULL THEN d2.name || \' \' || d2.surname ELSE NULL END AS dancer2
+                r.created_at,
+                CASE WHEN d2.sex = \'M\' AND d1.sex = \'F\' THEN d2.name || \' \' || d2.surname ELSE d1.name || \' \' || d1.surname END AS dancer1,
+                CASE 
+                    WHEN d2.idt IS NULL THEN NULL 
+                    WHEN d2.sex = \'M\' AND d1.sex = \'F\' THEN d1.name || \' \' || d1.surname 
+                    ELSE d2.name || \' \' || d2.surname 
+                END AS dancer2
              FROM competition_results r
              JOIN dance_pairs p ON p.pair_id = r.pair_id
              JOIN dancers d1 ON d1.idt = p.idt1
@@ -239,6 +247,7 @@ if ($method === 'GET') {
                 d1.idt AS dancer1_id,
                 d1.name AS dancer1_name,
                 d1.surname AS dancer1_surname,
+                d1.sex AS dancer1_sex,
                 d1.category_lat AS dancer1_lat,
                 d1.category_stt AS dancer1_stt,
                 d1.points_lat AS d1_points_lat,
@@ -248,6 +257,7 @@ if ($method === 'GET') {
                 d2.idt AS dancer2_id,
                 d2.name AS dancer2_name,
                 d2.surname AS dancer2_surname,
+                d2.sex AS dancer2_sex,
                 d2.category_lat AS dancer2_lat,
                 d2.category_stt AS dancer2_stt,
                 d2.points_lat AS d2_points_lat,
@@ -303,19 +313,30 @@ if ($method === 'GET') {
             $pointsStt = $stt ? (int) ($row['points_stt'] ?: $row['d1_points_stt']) : 0;
             $finalsStt = $stt ? (int) ($row['finals_stt'] ?: $row['d1_finals_stt']) : 0;
 
+            $d1 = [
+                'id' => (int) $row['dancer1_id'],
+                'name' => $row['dancer1_name'],
+                'surname' => $row['dancer1_surname'],
+            ];
+
+            $d2 = $hasDancer2 ? [
+                'id' => (int) $row['dancer2_id'],
+                'name' => $row['dancer2_name'],
+                'surname' => $row['dancer2_surname'],
+            ] : null;
+
+            // Vždy zajistit, že taneční pár začíná mužem
+            if ($d2 !== null && ($row['dancer1_sex'] ?? 'M') === 'F' && ($row['dancer2_sex'] ?? 'F') === 'M') {
+                $tmp = $d1;
+                $d1 = $d2;
+                $d2 = $tmp;
+            }
+
             return [
                 'pair_id' => (int) $row['pair_id'],
                 'is_solo' => !$hasDancer2,
-                'dancer1' => [
-                    'id' => (int) $row['dancer1_id'],
-                    'name' => $row['dancer1_name'],
-                    'surname' => $row['dancer1_surname'],
-                ],
-                'dancer2' => $hasDancer2 ? [
-                    'id' => (int) $row['dancer2_id'],
-                    'name' => $row['dancer2_name'],
-                    'surname' => $row['dancer2_surname'],
-                ] : null,
+                'dancer1' => $d1,
+                'dancer2' => $d2,
                 'category_lat' => $lat,
                 'category_stt' => $stt,
                 'points' => (int) $row['points'],
@@ -411,12 +432,17 @@ if ($method === 'GET') {
                 r.date,
                 r.location,
                 r.placement,
-                d1.name AS dancer1_name,
-                d1.surname AS dancer1_surname,
-                d2.name AS dancer2_name,
-                d2.surname AS dancer2_surname,
-                d1.name || \' \' || d1.surname AS dancer1,
-                CASE WHEN d2.idt IS NOT NULL THEN d2.name || \' \' || d2.surname ELSE NULL END AS dancer2
+                r.created_at,
+                CASE WHEN d2.sex = \'M\' AND d1.sex = \'F\' THEN d2.name ELSE d1.name END AS dancer1_name,
+                CASE WHEN d2.sex = \'M\' AND d1.sex = \'F\' THEN d2.surname ELSE d1.surname END AS dancer1_surname,
+                CASE WHEN d2.sex = \'M\' AND d1.sex = \'F\' THEN d1.name ELSE d2.name END AS dancer2_name,
+                CASE WHEN d2.sex = \'M\' AND d1.sex = \'F\' THEN d1.surname ELSE d2.surname END AS dancer2_surname,
+                CASE WHEN d2.sex = \'M\' AND d1.sex = \'F\' THEN d2.name || \' \' || d2.surname ELSE d1.name || \' \' || d1.surname END AS dancer1,
+                CASE 
+                    WHEN d2.idt IS NULL THEN NULL
+                    WHEN d2.sex = \'M\' AND d1.sex = \'F\' THEN d1.name || \' \' || d1.surname 
+                    ELSE d2.name || \' \' || d2.surname 
+                END AS dancer2
              FROM competition_results r
              JOIN dance_pairs p ON p.pair_id = r.pair_id
              JOIN dancers d1 ON d1.idt = p.idt1
@@ -514,11 +540,13 @@ if ($method === 'POST' && $action === 'create_dancer') {
     }
 
     $cstsIdt = !empty($payload['csts_idt']) && (int) $payload['csts_idt'] > 0 ? (int) $payload['csts_idt'] : null;
+    $sex = CstsService::inferSex($name, $surname, $payload['sex'] ?? null);
 
     $statement = $pdo->prepare(
         'INSERT INTO dancers (
             name,
             surname,
+            sex,
             category_lat,
             category_stt,
             points_lat,
@@ -532,6 +560,7 @@ if ($method === 'POST' && $action === 'create_dancer') {
          ) VALUES (
             :name,
             :surname,
+            :sex,
             :category_lat,
             :category_stt,
             :points_lat,
@@ -549,6 +578,7 @@ if ($method === 'POST' && $action === 'create_dancer') {
         $statement->execute([
             ':name' => $name,
             ':surname' => $surname,
+            ':sex' => $sex,
             ':category_lat' => validateCategory($payload['category_lat'] ?? null),
             ':category_stt' => validateCategory($payload['category_stt'] ?? null),
             ':points_lat' => (int) ($payload['points_lat'] ?? 0),
@@ -587,12 +617,14 @@ if ($method === 'PUT' && $action === 'update_dancer') {
     }
 
     $cstsIdt = !empty($payload['csts_idt']) && (int) $payload['csts_idt'] > 0 ? (int) $payload['csts_idt'] : null;
+    $sex = CstsService::inferSex($name, $surname, $payload['sex'] ?? null);
 
     $statement = $pdo->prepare(
         'UPDATE dancers
          SET
             name = :name,
             surname = :surname,
+            sex = :sex,
             category_lat = :category_lat,
             category_stt = :category_stt,
             points_lat = :points_lat,
@@ -611,6 +643,7 @@ if ($method === 'PUT' && $action === 'update_dancer') {
             ':idt' => $id,
             ':name' => $name,
             ':surname' => $surname,
+            ':sex' => $sex,
             ':category_lat' => validateCategory($payload['category_lat'] ?? null),
             ':category_stt' => validateCategory($payload['category_stt'] ?? null),
             ':points_lat' => (int) ($payload['points_lat'] ?? 0),
@@ -654,6 +687,30 @@ if ($method === 'POST' && $action === 'create_pair') {
         ]);
     }
 
+    $firstId = $idt1;
+    $secondId = $idt2;
+
+    if ($idt2 !== null) {
+        // Pravidlo tanečního sportu: Taneční pár VŽDY začíná mužem (idt1), partnerka je druhá (idt2)
+        $sexStmt = $pdo->prepare('SELECT idt, sex FROM dancers WHERE idt IN (:id1, :id2)');
+        $sexStmt->execute([':id1' => $idt1, ':id2' => $idt2]);
+        $sexMap = $sexStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        $sex1 = $sexMap[$idt1] ?? 'M';
+        $sex2 = $sexMap[$idt2] ?? 'F';
+
+        if ($sex1 === 'M' && $sex2 === 'F') {
+            $firstId = $idt1;
+            $secondId = $idt2;
+        } elseif ($sex1 === 'F' && $sex2 === 'M') {
+            $firstId = $idt2;
+            $secondId = $idt1;
+        } else {
+            $firstId = min($idt1, $idt2);
+            $secondId = max($idt1, $idt2);
+        }
+    }
+
     if ($idt2 === null) {
         $existingPair = $pdo->prepare(
             'SELECT pair_id
@@ -661,11 +718,8 @@ if ($method === 'POST' && $action === 'create_pair') {
              WHERE idt1 = :idt1 AND idt2 IS NULL
              LIMIT 1'
         );
-        $existingPair->execute([':idt1' => $idt1]);
+        $existingPair->execute([':idt1' => $firstId]);
     } else {
-        $firstId = min($idt1, $idt2);
-        $secondId = max($idt1, $idt2);
-
         $existingPair = $pdo->prepare(
             'SELECT pair_id
              FROM dance_pairs
@@ -687,9 +741,6 @@ if ($method === 'POST' && $action === 'create_pair') {
             'pair_id' => (int) $existing['pair_id'],
         ]);
     }
-
-    $firstId = $idt2 !== null ? min($idt1, $idt2) : $idt1;
-    $secondId = $idt2 !== null ? max($idt1, $idt2) : null;
 
     $statement = $pdo->prepare(
         'INSERT INTO dance_pairs (
@@ -847,13 +898,15 @@ if ($method === 'POST' && $action === 'create_result') {
             competition_name,
             date,
             location,
-            placement
+            placement,
+            created_at
          ) VALUES (
             :pair_id,
             :competition_name,
             :date,
             :location,
-            :placement
+            :placement,
+            NOW()
          ) RETURNING id'
     );
 

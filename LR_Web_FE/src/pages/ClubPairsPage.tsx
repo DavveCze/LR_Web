@@ -39,7 +39,7 @@ type SingleDancer = {
   finals_stt?: number;
 };
 
-function PersonName({ person }: { person: Person }) {
+function PersonName({ person }: { person: { name: string; surname: string } }) {
   return (
     <>
       {person.name} <strong className="font-semibold">{person.surname}</strong>
@@ -67,9 +67,6 @@ function Categories({
   }
 
   const formatStats = (points?: number, finals?: number) => {
-    if ((points ?? 0) === 0 && (finals ?? 0) === 0) {
-      return null;
-    }
     const p = points ?? 0;
     const f = finals ?? 0;
     return `(${p} b, ${f} F)`;
@@ -79,7 +76,7 @@ function Categories({
   const sttStats = formatStats(pointsStt, finalsStt);
 
   return (
-    <p className="mt-4 text-base tracking-wide text-neutral-900">
+    <p className="mt-3 sm:mt-4 text-sm sm:text-base tracking-wide text-neutral-900">
       {lat && (
         <>
           LAT <strong>{lat}</strong>
@@ -127,8 +124,9 @@ export function ClubPairsPage() {
       <PageHeader title="Naše páry" />
       <main className="py-10 text-neutral-950">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-8 flex justify-end">
+          <div className="mb-10 flex justify-center">
             <DarkButton
+              isBig
               onClick={() => {
                 navigate("/klub/vysledky-soutezi");
               }}
@@ -152,7 +150,7 @@ export function ClubPairsPage() {
               {pairs.map((pair) => (
                 <article
                   key={pair.pair_id}
-                  className="border-b border-neutral-300 px-4 py-9 md:px-24"
+                  className="border-b border-neutral-300 px-4 py-6 sm:py-9 md:px-24"
                 >
                   <h2 className="text-xl font-semibold italic leading-snug md:text-2xl">
                     <PersonName person={pair.dancer1} />
@@ -182,20 +180,19 @@ export function ClubPairsPage() {
             </section>
 
             {singles.length > 0 && (
-              <section className="mt-16 border-t border-neutral-300 pt-9">
-                <h2 className="mb-4 text-2xl font-bold uppercase tracking-wide text-neutral-800">
+              <section className="mt-14 sm:mt-16">
+                <h2 className="mb-6 text-2xl font-bold uppercase tracking-wide text-neutral-800">
                   Tanečníci bez páru
                 </h2>
 
-                <div className="grid gap-px border-t border-neutral-300 sm:grid-cols-2">
+                <div className="border-t border-neutral-300">
                   {singles.map((dancer) => (
                     <article
                       key={dancer.idt}
-                      className="border-b border-neutral-300 px-4 py-7 md:px-8"
+                      className="border-b border-neutral-300 px-4 py-6 sm:py-9 md:px-24"
                     >
-                      <h3 className="text-lg font-semibold italic">
-                        {dancer.name}{" "}
-                        <strong className="font-bold">{dancer.surname}</strong>
+                      <h3 className="text-xl font-semibold italic leading-snug md:text-2xl">
+                        <PersonName person={dancer} />
                       </h3>
 
                       <Categories

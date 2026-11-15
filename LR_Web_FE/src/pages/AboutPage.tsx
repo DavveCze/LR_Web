@@ -15,7 +15,7 @@ export const AboutPage: FC = () => {
           HISTORIE
         </h1>
 
-        <div className="space-y-6 text-[20px] font-light leading-[1.6] text-neutral-500 md:text-[21px]">
+        <div className="space-y-6 text-base sm:text-lg md:text-[21px] font-light leading-[1.6] text-neutral-500">
           <p className="grid grid-cols-[22px_1fr] gap-x-5">
             <span
               aria-hidden="true"

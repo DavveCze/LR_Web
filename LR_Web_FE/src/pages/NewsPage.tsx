@@ -60,25 +60,29 @@ export const NewsPage: React.FC = () => {
   return (
     <div>
       <PageHeader title="Aktuality" />
-      <main className="mx-auto max-w-5xl px-6 py-10 font-sans text-neutral-800">
-        <p className="mb-8 text-neutral-600">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 sm:py-10 font-sans text-neutral-800">
+        <p className="text-neutral-700 leading-relaxed text-base md:text-lg font-light">
           Sledujte nejnovější informace z dění v našem tanečním klubu a taneční škole.
         </p>
 
       {loading ? (
-        <div className="space-y-6">
+        <div className="mt-8 space-y-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-32 animate-pulse bg-neutral-100 rounded-sm" />
           ))}
         </div>
       ) : news.length > 0 ? (
-        <div className="space-y-12 divide-y divide-neutral-200">
-          {news.map((item) => (
-            <article
-              key={item.id}
-              id={`article-${item.id}`}
-              className="pt-10 first:pt-0 scroll-mt-36"
-            >
+        <div>
+          <div className="my-10 md:my-12 border-t border-neutral-200" />
+          {news.map((item, index) => (
+            <React.Fragment key={item.id}>
+              {index > 0 && (
+                <div className="my-10 md:my-12 border-t border-neutral-200" />
+              )}
+              <article
+                id={`article-${item.id}`}
+                className="scroll-mt-36"
+              >
               <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-neutral-500 font-semibold">
                 <time>{formatDate(item.date)}</time>
                 {item.updated_at && (
@@ -88,7 +92,7 @@ export const NewsPage: React.FC = () => {
                 )}
               </div>
 
-              <h2 className="mt-2 text-2xl md:text-3xl font-bold text-neutral-900 tracking-tight">
+              <h2 className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold text-neutral-900 tracking-tight">
                 {item.headline}
               </h2>
 
@@ -107,10 +111,11 @@ export const NewsPage: React.FC = () => {
                 {item.text}
               </div>
             </article>
-          ))}
+          </React.Fragment>
+        ))}
         </div>
       ) : (
-        <div className="border border-neutral-200 bg-neutral-50 p-8 text-center rounded-sm">
+        <div className="mt-8 border border-neutral-200 bg-neutral-50 p-8 text-center rounded-sm">
           <p className="text-neutral-700 font-medium">
             Momentálně zde nejsou žádná nová oznámení.
           </p>
