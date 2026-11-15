@@ -5,143 +5,9 @@ import { Slideshow } from "../components/ui/Slideshow";
 import { RajceGallery } from "../components/gallery/RajceGallery";
 import { PageHeader } from "../components/layout/PageHeader";
 import { getPageContent } from "../api/client";
+import { DEFAULT_CARMEN_DATA, type CarmenContent } from "../constants/carmenData";
 
 type CarmenTab = "tabory" | "prehled" | "tabor" | "primestsky" | "vikend" | "fotogalerie";
-
-interface CarmenTaboryData {
-  title: string;
-  paragraphs: string[];
-}
-
-interface CarmenContentData {
-  overview: {
-    title: string;
-    bullets: string[];
-    facebookUrl: string;
-    galleryUrl: string;
-    slideshow: { src: string; alt?: string }[];
-  };
-  tabory?: CarmenTaboryData;
-  tabor: {
-    title: string;
-    paragraphs: string[];
-    location: string;
-    age: string;
-    food: string;
-    poster: string;
-    registrationUrl: string;
-  };
-  primestsky: {
-    title: string;
-    paragraphs: string[];
-    location: string;
-    terms: string;
-    food: string;
-    julyUrl: string;
-    augustUrl: string;
-    poster: string;
-  };
-  vikend: {
-    title: string;
-    paragraphs: string[];
-    term: string;
-    location: string;
-    price: string;
-    poster: string;
-    registrationUrl: string;
-  };
-  fotogalerie: {
-    title: string;
-    albums: { id: string; title: string; image: string; url: string }[];
-  };
-}
-
-const DEFAULT_CARMEN_CONTENT: CarmenContentData = {
-  overview: {
-    title: "TŠ CARMEN",
-    bullets: [
-      "Taneční školu Carmen založila Lucie Skopalíková v roce 2000. Zaměřujeme se na práci s dětmi v mateřských a základních školách.",
-      "Nabízíme bohaté a kvalitní zkušenosti v oblasti výuky tance, rozvoj pohybu a koordinace dítěte, spoustu zážitků, legrace a her, mnohaletou praxi s dětmi. Výuka probíhá přímo ve školce či škole, takže nemusíte nikam dojíždět. Závěr kurzu je ukončen velkolepou taneční akademií v kulturním domě Akord. Možnost pokračování ve sportovním klubu LR Dance team Ostrava.",
-      "Během roku pořádáme další aktivity pro děti jako jsou např. víkendové pobyty, o prázdninách - spací tábor a také příměstské tábory.",
-    ],
-    facebookUrl: "https://www.facebook.com/groups/572718036195543",
-    galleryUrl: "/carmen/fotogalerie",
-    slideshow: [
-      { src: "/assets/imgs/carmen/carmen_tanec_1.webp", alt: "Taneční vystoupení Carmen" },
-      { src: "/assets/imgs/carmen/carmen_tanec1_1.webp", alt: "Dětský tanec Carmen" },
-      { src: "/assets/imgs/carmen/carmen_tanec3_1.webp", alt: "Taneční lekce Carmen" },
-      { src: "/assets/imgs/carmen/carmen_skupina_1.webp", alt: "Společné foto dětí Carmen" },
-    ],
-  },
-  tabory: {
-    title: "TÁBORY",
-    paragraphs: [
-      "Naše tábory jsou spojením tradičních a moderních táborů, které se svým osvědčeným týmem vedoucích s mnohaletou táborovou praxí tvoří nezapomenutelné prázdninové dny. Tábory pro děti pořádáme již od roku 2004. Nejen pro menší děti, ale i dospívající teenagery je připraven různorodý zábavný program. Těšit se můžete na nezapomenutelné chvíle strávené v krásné přírodě Beskyd, kde se Vaše děti budou moci zapojit do široké škály aktivit a her, pracují v týmech a nechybějí oblíbené diskotéky. Letní spací tábor pořádáme v RK Budoucnost, Nová Ves – Frýdlant nad Ostravicí, kde máme krásné zázemí s in-line dráhou, kterou využíváme k bruslení a skatu. Příměstské tábory pořádáme v Markvartovicích nedaleko Ostravy, kde již kousíček za městem jsme v úplně jiném světě.",
-      "Zárukou kvality našich táborů jsou spokojené děti, které se každoročně účastní našich letních táborů. Také rodinná atmosféra, která zaručí bezpečí a jistotu, pro děti, které s námi jedou poprvé. Zkrátka nezáleží na tom, kolik ti je let, jestli jsi holka nebo kluk. Na našem táboře si užiješ ty nejlepší prázdninové dny, poznáš nové kamarády a odvezeš si nezapomenutelné zážitky.",
-    ],
-  },
-  tabor: {
-    title: "SPACÍ TÁBOR",
-    paragraphs: [
-      "Letní spací tábor probíhá v RK Budoucnost v krásném prostředí Beskyd (Nová Ves – Frýdlant nad Ostravicí).",
-      "Děti čeká celotáborová hra, tréninky v tanečním sále, in-line dráha, diskotéky a koupání.",
-    ],
-    location: "RK Budoucnost, Frýdlant n. O.",
-    age: "od 6 do 17 let",
-    food: "Plná penze 5x denně + pitný režim",
-    poster: "/assets/imgs/downloaded/plakat_carmen_spaci_tabor_1.webp",
-    registrationUrl: "https://is.pohodlne.info/udalost/detail/7276514b04c88c5d5b6d4f6eed82ab20",
-  },
-  primestsky: {
-    title: "PŘÍMĚSTSKÝ TÁBOR",
-    paragraphs: [
-      "Příměstské tábory pořádáme v Markvartovicích nedaleko Ostravy, kde již kousíček za městem jsme v úplně jiném světě plném přírody.",
-      "Děti přicházejí ráno a odpoledne odcházejí domů. Program plný tance, her v přírodě a kamarádů.",
-    ],
-    location: "Markvartovice u Ostravy",
-    terms: "Červenec & Srpen",
-    food: "Oběd, svačina, pitný režim, program",
-    julyUrl: "https://is.pohodlne.info/udalost/detail/963ee4c7ec8f45e975dc32e22460b0e5",
-    augustUrl: "https://is.pohodlne.info/udalost/detail/a7f620f6e30b373bdbc66a86b8c9b407",
-    poster: "/assets/imgs/downloaded/plakat_carmen_primestsky_1.webp",
-  },
-  vikend: {
-    title: "TANEČNÍ VÍKEND",
-    paragraphs: [
-      "Vážení rodiče a milé děti, naše taneční škola pořádá každým rokem různé taneční víkendy a také letní a příměstské tábory. Pro děti máme kromě tanečních tréninků připraveny různé hry, k dispozici máme taneční sál, večer nesmí chybět diskotéka a také si odpočineme ve wellness hotelu Budoucnost.",
-      "Chceme vás tímto pozvat na taneční víkend do Frýdlantu nad Ostravicí na hotel Budoucnost, kde máme zázemí v příjemném prostředí Beskyd. Některé děti možná ještě nikde samotné nebyly, proto volíme na začátek pouze víkend, ať nemají děti strach, že budou dlouho bez rodičů, a dvě noci určitě zvládnou. Pro děti se snažíme udělat maximum, aby byly spokojené a víkend si pořádně užily!",
-      "Soustředění a tábory pořádáme již 20 let a mezi nejmladší účastníky patří i čtyřleté děti, takže nemusíte mít strach, o vaše děti bude dobře postaráno. Vaše děti si užijí skvělou atmosféru a vy se můžete v klidu odpočinout.",
-    ],
-    term: "12. 12. – 14. 12. 2026",
-    location: "Hotel Budoucnost, Frýdlant nad Ostravicí",
-    price: "2 600 Kč (cena zahrnuje ubytování, stravu, pitný režim, tréninky, taneční sál, wellness a dopravu)",
-    poster: "/assets/imgs/downloaded/plakat_carmen_vikend_1.webp",
-    registrationUrl: "https://is.pohodlne.info/udalost/detail/f1bea44fb1dd886eeeb7945055654da6",
-  },
-  fotogalerie: {
-    title: "FOTOGALERIE CARMEN",
-    albums: [
-      {
-        id: "akademie-2023",
-        title: "Akademie 2023",
-        image: "/assets/imgs/downloaded/carmen_akademie_2023_1.webp",
-        url: "https://www.rajce.idnes.cz/lr-dance/album/ts-carmen",
-      },
-      {
-        id: "akademie-2024",
-        title: "Akademie 2024",
-        image: "/assets/imgs/downloaded/carmen_akademie_2024_1.webp",
-        url: "https://www.rajce.idnes.cz/lr-dance/album/ts-carmen-2024",
-      },
-      {
-        id: "primestsky-2024",
-        title: "Příměstské tábory 2024",
-        image: "/assets/imgs/downloaded/carmen_primestsky_2024_1.webp",
-        url: "https://www.rajce.idnes.cz/lr-dance/album/primestsky-tabor-carmen-2024",
-      },
-    ],
-  },
-};
 
 export const CarmenPage: React.FC = () => {
   const { subSection } = useParams<{ subSection?: string }>();
@@ -166,20 +32,25 @@ export const CarmenPage: React.FC = () => {
       : path.includes("tabor") || subSection === "tabor"
       ? "tabor"
       : "prehled";
-  const [content, setContent] = useState<CarmenContentData>(DEFAULT_CARMEN_CONTENT);
+  const [content, setContent] = useState<CarmenContent>(DEFAULT_CARMEN_DATA);
 
   useEffect(() => {
     let isMounted = true;
-    getPageContent<Partial<CarmenContentData>>("carmen")
+    getPageContent<Partial<CarmenContent>>("carmen")
       .then((data) => {
         if (isMounted && data && typeof data === "object" && Object.keys(data).length > 0) {
           setContent((prev) => ({
             overview: { ...prev.overview, ...(data.overview || {}) },
-            tabory: { ...prev.tabory, ...(data.tabory || {}) } as CarmenTaboryData,
+            tabory: { ...prev.tabory, ...(data.tabory || {}) },
             tabor: { ...prev.tabor, ...(data.tabor || {}) },
             primestsky: { ...prev.primestsky, ...(data.primestsky || {}) },
             vikend: { ...prev.vikend, ...(data.vikend || {}) },
-            fotogalerie: { ...prev.fotogalerie, ...(data.fotogalerie || {}) },
+            fotogalerie: {
+              title: data.fotogalerie?.title || prev.fotogalerie.title,
+              albums: Array.isArray(data.fotogalerie?.albums)
+                ? data.fotogalerie.albums
+                : prev.fotogalerie.albums,
+            },
           }));
         }
       })

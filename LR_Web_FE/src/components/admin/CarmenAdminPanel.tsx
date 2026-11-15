@@ -1,69 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getPageContent, savePageContent } from "../../api/client";
 import { ImagePickerInput } from "./ImagePickerInput";
-
-interface CarmenOverview {
-  title: string;
-  bullets: string[];
-  facebookUrl: string;
-  galleryUrl: string;
-  slideshow: { src: string; alt?: string }[];
-}
-
-interface CarmenTabor {
-  title: string;
-  paragraphs: string[];
-  location: string;
-  age: string;
-  food: string;
-  poster: string;
-  registrationUrl: string;
-}
-
-interface CarmenPrimestsky {
-  title: string;
-  paragraphs: string[];
-  location: string;
-  terms: string;
-  food: string;
-  julyUrl: string;
-  augustUrl: string;
-  poster: string;
-}
-
-interface CarmenVikend {
-  title: string;
-  paragraphs: string[];
-  term: string;
-  location: string;
-  price: string;
-  poster: string;
-  registrationUrl: string;
-}
-
-interface CarmenAlbum {
-  id: string;
-  title: string;
-  image: string;
-  url: string;
-}
-
-interface CarmenContent {
-  overview: CarmenOverview;
-  tabory?: {
-    title: string;
-    subtitle?: string;
-    banner?: string;
-    paragraphs: string[];
-  };
-  tabor: CarmenTabor;
-  primestsky: CarmenPrimestsky;
-  vikend: CarmenVikend;
-  fotogalerie: {
-    title: string;
-    albums: CarmenAlbum[];
-  };
-}
+import { DEFAULT_CARMEN_DATA, type CarmenContent } from "../../constants/carmenData";
 
 export const CarmenAdminPanel: React.FC = () => {
   const [data, setData] = useState<CarmenContent | null>(null);
@@ -73,14 +11,29 @@ export const CarmenAdminPanel: React.FC = () => {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
-    getPageContent<CarmenContent>("carmen")
+    getPageContent<Partial<CarmenContent>>("carmen")
       .then((json) => {
         if (json && typeof json === "object") {
-          setData(json as CarmenContent);
+          setData({
+            overview: { ...DEFAULT_CARMEN_DATA.overview, ...(json.overview || {}) },
+            tabory: { ...DEFAULT_CARMEN_DATA.tabory, ...(json.tabory || {}) },
+            tabor: { ...DEFAULT_CARMEN_DATA.tabor, ...(json.tabor || {}) },
+            primestsky: { ...DEFAULT_CARMEN_DATA.primestsky, ...(json.primestsky || {}) },
+            vikend: { ...DEFAULT_CARMEN_DATA.vikend, ...(json.vikend || {}) },
+            fotogalerie: {
+              title: json.fotogalerie?.title || DEFAULT_CARMEN_DATA.fotogalerie.title,
+              albums: Array.isArray(json.fotogalerie?.albums)
+                ? json.fotogalerie.albums
+                : DEFAULT_CARMEN_DATA.fotogalerie.albums,
+            },
+          });
+        } else {
+          setData(DEFAULT_CARMEN_DATA);
         }
       })
       .catch(() => {
-        setMessage({ type: "error", text: "Nepodařilo se načíst obsah sekce Carmen." });
+        setData(DEFAULT_CARMEN_DATA);
+        setMessage({ type: "error", text: "Nepodařilo se načíst obsah sekce Carmen, použita výchozí data." });
       })
       .finally(() => setLoading(false));
   }, []);

@@ -112,8 +112,91 @@ export const seedInitialData = mutation({
             augustUrl: "https://is.pohodlne.info/udalost/detail/a7f620f6e30b373bdbc66a86b8c9b407",
             poster: "/assets/imgs/downloaded/plakat_carmen_primestsky_1.webp",
           },
+          vikend: {
+            title: "TANEČNÍ VÍKEND",
+            paragraphs: [
+              "Vážení rodiče a milé děti, naše taneční škola pořádá každým rokem různé taneční víkendy a také letní a příměstské tábory. Pro děti máme kromě tanečních tréninků připraveny různé hry, k dispozici máme taneční sál, večer nesmí chybět diskotéka a také si odpočineme ve wellness hotelu Budoucnost.",
+              "Chceme vás tímto pozvat na taneční víkend do Frýdlantu nad Ostravicí na hotel Budoucnost, kde máme zázemí v příjemném prostředí Beskyd. Některé děti možná ještě nikde samotné nebyly, proto volíme na začátek pouze víkend, ať nemají děti strach, že budou dlouho bez rodičů, a dvě noci určitě zvládnou. Pro děti se snažíme udělat maximum, aby byly spokojené a víkend si pořádně užily!",
+              "Soustředění a tábory pořádáme již 20 let a mezi nejmladší účastníky patří i čtyřleté děti, takže nemusíte mít strach, o vaše děti bude dobře postaráno. Vaše děti si užijí skvělou atmosféru a vy se můžete v klidu odpočinout.",
+            ],
+            term: "12. 12. – 14. 12. 2026",
+            location: "Hotel Budoucnost, Frýdlant nad Ostravicí",
+            price: "2 600 Kč (cena zahrnuje ubytování, stravu, pitný režim, tréninky, taneční sál, wellness a dopravu)",
+            poster: "/assets/imgs/downloaded/plakat_carmen_vikend_1.webp",
+            registrationUrl: "https://is.pohodlne.info/udalost/detail/f1bea44fb1dd886eeeb7945055654da6",
+          },
+          fotogalerie: {
+            title: "FOTOGALERIE CARMEN",
+            albums: [
+              {
+                id: "akademie-2023",
+                title: "Akademie 2023",
+                image: "/assets/imgs/downloaded/carmen_akademie_2023_1.webp",
+                url: "https://www.rajce.idnes.cz/lr-dance/album/ts-carmen",
+              },
+              {
+                id: "akademie-2024",
+                title: "Akademie 2024",
+                image: "/assets/imgs/downloaded/carmen_akademie_2024_1.webp",
+                url: "https://www.rajce.idnes.cz/lr-dance/album/ts-carmen-2024",
+              },
+              {
+                id: "primestsky-2024",
+                title: "Příměstské tábory 2024",
+                image: "/assets/imgs/downloaded/carmen_primestsky_2024_1.webp",
+                url: "https://www.rajce.idnes.cz/lr-dance/album/primestsky-tabor-carmen-2024",
+              },
+            ],
+          },
         },
       });
+    } else {
+      // Pokud záznam carmen existuje, zkontrolujeme zda mu nechybí vikend či fotogalerie
+      const carmenData = (existingCarmen.data || {}) as Record<string, any>;
+      if (!carmenData.vikend || !carmenData.fotogalerie) {
+        await ctx.db.patch(existingCarmen._id, {
+          updatedAt: new Date().toISOString(),
+          data: {
+            ...carmenData,
+            vikend: carmenData.vikend || {
+              title: "TANEČNÍ VÍKEND",
+              paragraphs: [
+                "Vážení rodiče a milé děti, naše taneční škola pořádá každým rokem různé taneční víkendy a také letní a příměstské tábory. Pro děti máme kromě tanečních tréninků připraveny různé hry, k dispozici máme taneční sál, večer nesmí chybět diskotéka a také si odpočineme ve wellness hotelu Budoucnost.",
+                "Chceme vás tímto pozvat na taneční víkend do Frýdlantu nad Ostravicí na hotel Budoucnost, kde máme zázemí v příjemném prostředí Beskyd. Některé děti možná ještě nikde samotné nebyly, proto volíme na začátek pouze víkend, ať nemají děti strach, že budou dlouho bez rodičů, a dvě noci určitě zvládnou. Pro děti se snažíme udělat maximum, aby byly spokojené a víkend si pořádně užily!",
+                "Soustředění a tábory pořádáme již 20 let a mezi nejmladší účastníky patří i čtyřleté děti, takže nemusíte mít strach, o vaše děti bude dobře postaráno. Vaše děti si užijí skvělou atmosféru a vy se můžete v klidu odpočinout.",
+              ],
+              term: "12. 12. – 14. 12. 2026",
+              location: "Hotel Budoucnost, Frýdlant nad Ostravicí",
+              price: "2 600 Kč (cena zahrnuje ubytování, stravu, pitný režim, tréninky, taneční sál, wellness a dopravu)",
+              poster: "/assets/imgs/downloaded/plakat_carmen_vikend_1.webp",
+              registrationUrl: "https://is.pohodlne.info/udalost/detail/f1bea44fb1dd886eeeb7945055654da6",
+            },
+            fotogalerie: carmenData.fotogalerie || {
+              title: "FOTOGALERIE CARMEN",
+              albums: [
+                {
+                  id: "akademie-2023",
+                  title: "Akademie 2023",
+                  image: "/assets/imgs/downloaded/carmen_akademie_2023_1.webp",
+                  url: "https://www.rajce.idnes.cz/lr-dance/album/ts-carmen",
+                },
+                {
+                  id: "akademie-2024",
+                  title: "Akademie 2024",
+                  image: "/assets/imgs/downloaded/carmen_akademie_2024_1.webp",
+                  url: "https://www.rajce.idnes.cz/lr-dance/album/ts-carmen-2024",
+                },
+                {
+                  id: "primestsky-2024",
+                  title: "Příměstské tábory 2024",
+                  image: "/assets/imgs/downloaded/carmen_primestsky_2024_1.webp",
+                  url: "https://www.rajce.idnes.cz/lr-dance/album/primestsky-tabor-carmen-2024",
+                },
+              ],
+            },
+          },
+        });
+      }
     }
 
     // 2. Naseedujeme registrations, pokud je tabulka prázdná
