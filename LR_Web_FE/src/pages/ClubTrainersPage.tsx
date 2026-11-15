@@ -12,11 +12,14 @@ export const ClubTrainersPage: React.FC = () => {
       .then((items) => {
         // Normalizace formátu
         const formatted: TrainerProps[] = items.map((t) => ({
+          id: t.id || t._id,
           full_name: t.full_name || t.name,
           title: t.title || t.role || "Trenér",
-          image_src: t.image_src || t.image_url || t.image || "/assets/imgs/dancers/default_dancer.webp",
+          image_src: t.image_src || t.image_url || t.image || "",
           info: t.info || t.bio || "",
-          order: t.order || 0,
+          category_lat: Boolean(t.category_lat),
+          category_stt: Boolean(t.category_stt),
+          display_order: t.display_order ?? t.order ?? 0,
           is_active: t.is_active ?? t.isActive ?? true,
         }));
         setTrainers(formatted.filter((t) => (t.title === "Trenér" || !t.title) && t.is_active !== false));
@@ -45,8 +48,8 @@ export const ClubTrainersPage: React.FC = () => {
         {smallTrainers.length > 0 && (
           <section className="mb-16">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-12">
-              {smallTrainers.map(trainer => (
-                <TrainerProfileSmall key={trainer.id} {...trainer} />
+              {smallTrainers.map((trainer, idx) => (
+                <TrainerProfileSmall key={trainer.id || idx} {...trainer} />
               ))}
             </div>
           </section>
@@ -55,8 +58,8 @@ export const ClubTrainersPage: React.FC = () => {
         {largeTrainers.length > 0 && (
           <section className={smallTrainers.length > 0 ? "mt-12 border-t border-gray-200 pt-8" : ""}>
             <div className="flex flex-col gap-4">
-              {largeTrainers.map(trainer => (
-                <TrainerProfileLarge key={trainer.id} {...trainer} />
+              {largeTrainers.map((trainer, idx) => (
+                <TrainerProfileLarge key={trainer.id || idx} {...trainer} />
               ))}
             </div>
           </section>

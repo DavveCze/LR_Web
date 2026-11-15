@@ -13,9 +13,28 @@ export function useRefreshingAsset(
   pageFolder: string = "home_imgs",
   refreshIntervalMs = 5000
 ) {
-  const [src, setSrc] = useState<string | null>(null);
+  const isDirectUrl = Boolean(
+    baseName &&
+      (baseName.startsWith("http://") ||
+        baseName.startsWith("https://") ||
+        baseName.startsWith("/") ||
+        baseName.startsWith("data:") ||
+        baseName.startsWith("blob:"))
+  );
+
+  const [src, setSrc] = useState<string | null>(isDirectUrl ? baseName : null);
 
   useEffect(() => {
+    if (!baseName) {
+      setSrc(null);
+      return;
+    }
+
+    if (isDirectUrl) {
+      setSrc(baseName);
+      return;
+    }
+
     let isMounted = true;
     let lastSrc: string | null = null;
     let stableCount = 0;
@@ -44,7 +63,7 @@ export function useRefreshingAsset(
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, [baseName, pageFolder, refreshIntervalMs]);
+  }, [baseName, pageFolder, refreshIntervalMs, isDirectUrl]);
 
   return src;
 }
@@ -121,7 +140,12 @@ export const HelperImage: FC<{
     if (!src) return;
     const img = new Image();
     img.src = src;
+    if (img.complete) {
+      setDecodedSrc(src);
+      return;
+    }
     img.onload = () => setDecodedSrc(src);
+    img.onerror = () => setDecodedSrc(src);
   }, [src]);
 
   const isDecoded = decodedSrc === src;

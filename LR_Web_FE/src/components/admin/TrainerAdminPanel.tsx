@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TrainerProps } from '../ui/TrainerProfiles';
+import { TrainerProps, resolveTrainerImageUrl } from '../ui/TrainerProfiles';
 import { apiUrl } from '../../api/client';
 import { convex } from '../../convex';
 import { api } from '../../api/client';
@@ -30,6 +30,7 @@ export const TrainerAdminPanel: React.FC = () => {
                             is_active: t.isActive ?? t.is_active ?? true,
                             display_order: t.order ?? t.display_order ?? 0,
                         })));
+                        return;
                     }
                 })
                 .catch(() => {});
@@ -41,7 +42,21 @@ export const TrainerAdminPanel: React.FC = () => {
                 if (res.ok && isJson) return await res.json();
                 return null;
             })
-            .then(data => { if (data && data.status === 'success' && Array.isArray(data.data)) setTrainers(data.data); })
+            .then(data => {
+                if (data && data.status === 'success' && Array.isArray(data.data)) {
+                    setTrainers(data.data.map((t: any) => ({
+                        id: t.id,
+                        full_name: t.full_name || t.name,
+                        title: t.title || t.role || 'Trenér',
+                        info: t.info || t.bio || '',
+                        image_src: t.image_src || t.image || '',
+                        category_lat: Boolean(t.category_lat),
+                        category_stt: Boolean(t.category_stt),
+                        is_active: t.is_active !== false,
+                        display_order: t.display_order ?? 0,
+                    })));
+                }
+            })
             .catch(() => {});
     };
 
@@ -161,6 +176,7 @@ export const TrainerAdminPanel: React.FC = () => {
             <table className="w-full text-left border-collapse">
                 <thead>
                     <tr className="bg-gray-50 border-b">
+                        <th className="p-3 w-16">Foto</th>
                         <th className="p-3">Jméno</th>
                         <th className="p-3">Kategorie (LAT/STT)</th>
                         <th className="p-3">Aktivní</th>
@@ -170,6 +186,20 @@ export const TrainerAdminPanel: React.FC = () => {
                 <tbody>
                     {trainers.map(t => (
                         <tr key={String(t.id)} className="border-b hover:bg-gray-50">
+                            <td className="p-3">
+                                <img
+                                    src={resolveTrainerImageUrl(t.image_src)}
+                                    alt={t.full_name}
+                                    className="w-10 h-10 rounded-full object-cover border border-neutral-200 bg-neutral-100"
+                                    onError={(e) => {
+                                        const target = e.currentTarget;
+                                        if (!target.dataset.triedFallback) {
+                                            target.dataset.triedFallback = 'true';
+                                            target.src = '/assets/imgs/dancers/default_dancer.webp';
+                                        }
+                                    }}
+                                />
+                            </td>
                             <td className="p-3 font-medium">{t.full_name}</td>
                             <td className="p-3 text-sm">
                                 {[t.category_lat ? 'LAT' : '', t.category_stt ? 'STT' : ''].filter(Boolean).join(', ')}
@@ -187,7 +217,7 @@ export const TrainerAdminPanel: React.FC = () => {
                     ))}
                     {trainers.length === 0 && (
                         <tr>
-                            <td colSpan={4} className="p-4 text-center text-gray-500">Zatím žádní trenéři</td>
+                            <td colSpan={5} className="p-4 text-center text-gray-500">Zatím žádní trenéři</td>
                         </tr>
                     )}
                 </tbody>

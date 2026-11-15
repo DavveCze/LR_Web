@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ImagePickerModal } from './ImagePickerModal';
+import { resolveTrainerImageUrl } from '../ui/TrainerProfiles';
 
 export interface ImagePickerInputProps {
   value: string;
@@ -27,11 +28,7 @@ export const ImagePickerInput: React.FC<ImagePickerInputProps> = ({
   // Získání URL pro náhled fotky (podporuje jak plnou cestu, tak baseName)
   const previewSrc = React.useMemo(() => {
     if (!value) return null;
-    if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/')) {
-      return value;
-    }
-    // Pokud je zadán baseName (např. u trenérů), zkusíme náhled v treneri složce
-    return `/assets/imgs/treneri/${value}_1.webp`;
+    return resolveTrainerImageUrl(value);
   }, [value]);
 
   return (
@@ -90,9 +87,9 @@ export const ImagePickerInput: React.FC<ImagePickerInputProps> = ({
             className="h-12 w-16 rounded object-contain bg-white border border-neutral-200"
             onError={(e) => {
               const target = e.currentTarget;
-              if (!target.dataset.triedFallback && !target.src.includes(':5173')) {
+              if (!target.dataset.triedFallback) {
                 target.dataset.triedFallback = 'true';
-                target.src = `http://localhost:5173${value}`;
+                target.src = '/assets/imgs/dancers/default_dancer.webp';
               } else {
                 target.style.display = 'none';
               }
