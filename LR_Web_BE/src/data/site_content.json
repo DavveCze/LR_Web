@@ -2,17 +2,10 @@
     "test": {
         "updated": true
     },
-    "_updated_at": "2026-10-11T17:09:40+00:00",
+    "_updated_at": "2026-11-15T10:34:21+00:00",
     "partners": {
         "title": "PARTNEŘI",
         "mainLogos": [
-            {
-                "id": "csts",
-                "name": "Český svaz tanečního sportu",
-                "logo": "/assets/imgs/partners/csts_logo_1.webp",
-                "url": "https://csts.cz",
-                "position": "left"
-            },
             {
                 "id": "ostrava",
                 "name": "Statutární město Ostrava",
@@ -26,6 +19,41 @@
                 "logo": "/assets/imgs/partners/nsa_logo_1.webp",
                 "url": "https://nsa.gov.cz",
                 "position": "right-bottom"
+            },
+            {
+                "id": "partner-1794738624981",
+                "name": "Panter 1",
+                "logo": "/assets/imgs/downloaded/plakat_tanecni_kurzy_1.webp",
+                "url": "",
+                "position": "right-top"
+            },
+            {
+                "id": "partner-1794738633502",
+                "name": "Hujopjkdf",
+                "logo": "/assets/imgs/downloaded/hotel_budoucnost_1.webp",
+                "url": "",
+                "position": "grid"
+            },
+            {
+                "id": "partner-1794738636081",
+                "name": "Alkjhxdfoi",
+                "logo": "/assets/imgs/downloaded/plakat_carmen_primestsky_1.webp",
+                "url": "",
+                "position": "grid"
+            },
+            {
+                "id": "partner-1794738639487",
+                "name": "Nový partner",
+                "logo": "/assets/imgs/carmen/carmen_skupina_1.webp",
+                "url": "",
+                "position": "grid"
+            },
+            {
+                "id": "partner-1794738830942",
+                "name": "ČSTS",
+                "logo": "/assets/imgs/partners/csts_logo_1.webp",
+                "url": "https://csts.cz",
+                "position": "left"
             }
         ],
         "notices": [
@@ -42,6 +70,13 @@
         ]
     },
     "carmen": {
+        "tabory": {
+            "title": "TÁBORY",
+            "paragraphs": [
+                "Naše tábory jsou spojením tradičních a moderních táborů, které se svým osvědčeným týmem vedoucích s mnohaletou táborovou praxí tvoří nezapomenutelné prázdninové dny. Tábory pro děti pořádáme již od roku 2004. Nejen pro menší děti, ale i dospívající teenagery je připraven různorodý zábavný program. Těšit se můžete na nezapomenutelné chvíle strávené v krásné přírodě Beskyd, kde se Vaše děti budou moci zapojit do široké škály aktivit a her, pracují v týmech a nechybějí oblíbené diskotéky. Letní spací tábor pořádáme v RK Budoucnost, Nová Ves – Frýdlant nad Ostravicí, kde máme krásné zázemí s in-line dráhou, kterou využíváme k bruslení a skatu. Příměstské tábory pořádáme v Markvartovicích nedaleko Ostravy, kde již kousíček za městem jsme v úplně jiném světě.",
+                "Zárukou kvality našich táborů jsou spokojené děti, které se každoročně účastní našich letních táborů. Také rodinná atmosféra, která zaručí bezpečí a jistotu, pro děti, které s námi jedou poprvé. Zkrátka nezáleží na tom, kolik ti je let, jestli jsi holka nebo kluk. Na našem táboře si užiješ ty nejlepší prázdninové dny, poznáš nové kamarády a odvezeš si nezapomenutelné zážitky."
+            ]
+        },
         "overview": {
             "title": "TŠ CARMEN",
             "bullets": [

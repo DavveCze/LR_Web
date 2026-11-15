@@ -260,7 +260,7 @@ export const RajceGallery: React.FC<RajceGalleryProps> = ({
       {/* =========================================================================
           ZÁHLAVÍ STRÁNKY / SEKCE
       ========================================================================= */}
-      <div className="mb-10 border-b-2 border-neutral-900 pb-5">
+      <div className="mb-10 border-b border-neutral-300 pb-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             {activeAlbum ? (
@@ -270,7 +270,7 @@ export const RajceGallery: React.FC<RajceGalleryProps> = ({
                   onClick={handleBackToAlbums}
                   className="hover:text-neutral-900 transition-colors flex items-center gap-1 cursor-pointer"
                 >
-                  ← {effectiveCategory === "carmen" ? "Alba Carmen" : effectiveCategory === "club" ? "Klubová alba" : "Všechna alba"}
+                  ‹ {effectiveCategory === "carmen" ? "Alba Carmen" : effectiveCategory === "club" ? "Klubová alba" : "Všechna alba"}
                 </button>
                 <span>/</span>
                 <span className="text-neutral-900">
@@ -303,7 +303,7 @@ export const RajceGallery: React.FC<RajceGalleryProps> = ({
                   onClick={handleBackToAlbums}
                   className="px-4 py-2 text-xs font-bold uppercase tracking-wider border border-neutral-300 text-neutral-800 hover:bg-neutral-100 transition-colors cursor-pointer"
                 >
-                  ← {effectiveCategory === "carmen" ? "Zpět na alba Carmen" : effectiveCategory === "club" ? "Zpět na klubová alba" : "Zpět na alba"}
+                  ‹ {effectiveCategory === "carmen" ? "Zpět na alba Carmen" : effectiveCategory === "club" ? "Zpět na klubová alba" : "Zpět na alba"}
                 </button>
                 <a
                   href={activeAlbum.url}

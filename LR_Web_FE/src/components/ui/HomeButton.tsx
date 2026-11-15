@@ -1,4 +1,5 @@
 import { type FC } from "react";
+import { Link } from "react-router-dom";
 
 export interface HomeButtonProps {
     color: string;
@@ -26,19 +27,45 @@ export const HomeButton: FC<HomeButtonProps> = ({
     const linkTarget = target ?? (isExternal ? "_blank" : undefined);
     const linkRel = rel ?? (isExternal ? "noopener noreferrer" : undefined);
 
-    // Směr šipky: explicitní direction má přednost před legacy booleanem arrows
     const resolvedDirection: "left" | "right" =
         direction ?? (arrows === false ? "left" : "right");
+
+    const buttonClass = `w-fit inline-block rounded-lg px-6 py-3 text-sm font-medium transition hover:opacity-80 text-center ${className}`;
+    const buttonStyle = { backgroundColor: color, color: sec_color, border: `1px solid ${sec_color}` };
+
+    const renderedContent = (
+        <>
+            {resolvedDirection === "left" && (
+                <span className="hidden sm:inline" aria-hidden="true">‹‹ </span>
+            )}
+            <span>{content}</span>
+            {resolvedDirection === "right" && (
+                <span className="hidden sm:inline" aria-hidden="true"> ››</span>
+            )}
+        </>
+    );
+
+    if (!isExternal) {
+        return (
+            <Link
+                to={href}
+                className={buttonClass}
+                style={buttonStyle}
+            >
+                {renderedContent}
+            </Link>
+        );
+    }
 
     return (
         <a
             href={href}
             target={linkTarget}
             rel={linkRel}
-            className={`w-fit inline-block rounded-lg px-6 py-3 text-sm font-medium transition hover:opacity-80 ${className}`}
-            style={{ backgroundColor: color, color: sec_color, border: `1px solid ${sec_color}` }}
+            className={buttonClass}
+            style={buttonStyle}
         >
-            {resolvedDirection === "right" ? `${content} ››` : `‹‹ ${content}`}
+            {renderedContent}
         </a>
     );
 };

@@ -4,6 +4,7 @@ import { EditableProvider, EditableText } from "../components/cms/EditableConten
 import { PageHeader } from "../components/layout/PageHeader";
 import { HomeButton } from "../components/ui/HomeButton";
 import { apiUrl } from "../api/client";
+import { formatShortAddress } from "../utils/formatAddress";
 
 export interface EventItem {
   id: number | string;
@@ -24,7 +25,7 @@ const DEFAULT_EVENTS: EventItem[] = [
     id: 1,
     date: "11. – 13. 12.",
     title: "LR Víkendové soustředění",
-    location: "Rekreační středisko Budoucnost, Nová Ves 139, 739 11 Frýdlant nad Ostravicí",
+    location: "Rekreační středisko Budoucnost, Nová Ves 139, Frýdlant nad Ostravicí",
     type: "soustredeni",
     note: "Intenzivní víkendový seminář LAT & STT s trenéry klubu",
     startDate: "2026-12-11",
@@ -35,7 +36,7 @@ const DEFAULT_EVENTS: EventItem[] = [
     id: 2,
     date: "04. – 09. 08. 2027",
     title: "LR Letní soustředění",
-    location: "Hotel Beskyd, Trojanovice 700, 744 01 Trojanovice",
+    location: "Hotel Beskyd, Trojanovice 700, Trojanovice",
     type: "soustredeni",
     note: "Fyzický trénink, standard i latina pro všechny věkové kategorie",
     startDate: "2027-08-04",
@@ -181,10 +182,18 @@ function formatLocationLine(location?: string): string {
   if (trimmed.toLowerCase().includes("hotel beskyd")) {
     return "v hotelu Beskyd (Trojanovice).";
   }
-  if (/^(v|ve|na|u)\s/i.test(trimmed)) {
-    return trimmed.endsWith(".") ? trimmed : trimmed + ".";
+  const short = formatShortAddress(trimmed);
+  if (/^(v|ve|na|u)\s/i.test(short)) {
+    return short.endsWith(".") ? short : short + ".";
   }
-  return `v: ${trimmed.endsWith(".") ? trimmed : trimmed + "."}`;
+  return `v: ${short.endsWith(".") ? short : short + "."}`;
+}
+
+function getGoogleMapsUrl(location?: string): string {
+  if (!location || !location.trim()) {
+    return "https://www.google.com/maps";
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.trim())}`;
 }
 
 function getEventImage(event?: EventItem | null): string {
@@ -308,7 +317,33 @@ export const CalendarPage: React.FC = () => {
                 </h2>
                 {featuredSubheadline && (
                   <p className="mt-1 text-base sm:text-lg text-neutral-700">
-                    {featuredSubheadline}
+                    {nextEvent?.location ? (
+                      <a
+                        href={getGoogleMapsUrl(nextEvent.location)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-red-700 underline decoration-neutral-300 hover:decoration-red-700 underline-offset-2 transition-colors inline-flex items-center gap-1.5 group"
+                        title={`Zobrazit místo na Google Mapách: ${nextEvent.location}`}
+                      >
+                        <span>{featuredSubheadline}</span>
+                        <svg
+                          className="w-4 h-4 text-neutral-400 group-hover:text-red-700 transition-colors shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                          />
+                        </svg>
+                      </a>
+                    ) : (
+                      featuredSubheadline
+                    )}
                   </p>
                 )}
               </div>
@@ -325,7 +360,7 @@ export const CalendarPage: React.FC = () => {
                   color="#393939"
                   content="Google kalendář"
                   href={googleCalendarUrl}
-                  direction="right"
+                  className="w-full sm:w-auto text-center font-bold uppercase tracking-wider"
                 />
               </div>
             </div>
@@ -443,7 +478,34 @@ export const CalendarPage: React.FC = () => {
                     <div>
                       <h3 className="text-lg font-semibold text-neutral-900">{event.title}</h3>
                       <p className="mt-1 text-sm text-neutral-600">
-                        Místo: <strong className="text-neutral-800">{event.location}</strong>
+                        Místo:{" "}
+                        {event.location ? (
+                          <a
+                            href={getGoogleMapsUrl(event.location)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-bold text-neutral-800 hover:text-red-700 underline decoration-neutral-300 hover:decoration-red-700 underline-offset-2 transition-colors inline-flex items-center gap-1 group"
+                            title={`Zobrazit místo konání na Google Mapách: ${formatShortAddress(event.location)}`}
+                          >
+                            <span>{formatShortAddress(event.location)}</span>
+                            <svg
+                              className="w-3.5 h-3.5 text-neutral-400 group-hover:text-red-700 transition-colors shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                              aria-hidden="true"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                              />
+                            </svg>
+                          </a>
+                        ) : (
+                          <span className="text-neutral-500">—</span>
+                        )}
                       </p>
                       {event.note && (
                         <p className="mt-1 text-xs text-neutral-500 italic">{event.note}</p>

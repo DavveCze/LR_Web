@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const DARK = "#1f2937";
 const WHITE = "#ffffff";
@@ -75,11 +76,27 @@ export const LightButton = ({
         const linkTarget = target ?? (isExternal ? "_blank" : undefined);
         const linkRel = rel ?? (isExternal ? "noopener noreferrer" : undefined);
 
+        if (!isExternal) {
+            return (
+                <Link
+                    to={href}
+                    onClick={onClick}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    style={style}
+                    className={classes}
+                >
+                    {children}
+                </Link>
+            );
+        }
+
         return (
             <a
                 href={href}
                 target={linkTarget}
                 rel={linkRel}
+                onClick={onClick}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 style={style}
@@ -167,11 +184,27 @@ export const DarkButton = ({
         const linkTarget = target ?? (isExternal ? "_blank" : undefined);
         const linkRel = rel ?? (isExternal ? "noopener noreferrer" : undefined);
 
+        if (!isExternal) {
+            return (
+                <Link
+                    to={href}
+                    onClick={onClick}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    style={style}
+                    className={classes}
+                >
+                    {children}
+                </Link>
+            );
+        }
+
         return (
             <a
                 href={href}
                 target={linkTarget}
                 rel={linkRel}
+                onClick={onClick}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 style={style}

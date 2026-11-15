@@ -61,9 +61,6 @@ export const NewsPage: React.FC = () => {
     <div>
       <PageHeader title="Aktuality" />
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 sm:py-10 font-sans text-neutral-800">
-        <p className="text-neutral-700 leading-relaxed text-base md:text-lg font-light">
-          Sledujte nejnovější informace z dění v našem tanečním klubu a taneční škole.
-        </p>
 
       {loading ? (
         <div className="mt-8 space-y-6">
@@ -73,7 +70,6 @@ export const NewsPage: React.FC = () => {
         </div>
       ) : news.length > 0 ? (
         <div>
-          <div className="my-10 md:my-12 border-t border-neutral-200" />
           {news.map((item, index) => (
             <React.Fragment key={item.id}>
               {index > 0 && (

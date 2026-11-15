@@ -1,6 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { apiUrl } from "../api/client";
 import { PageHeader } from "../components/layout/PageHeader";
+import {
+  TrainingLocation,
+  DEFAULT_TRAINING_LOCATIONS,
+} from "../components/admin/TrainingLocationsAdmin";
+import { formatShortAddress } from "../utils/formatAddress";
 
 export const ContactPage: React.FC = () => {
   const [name, setName] = useState("");
@@ -13,6 +18,21 @@ export const ContactPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+
+  const [locations, setLocations] = useState<TrainingLocation[]>(DEFAULT_TRAINING_LOCATIONS);
+
+  useEffect(() => {
+    fetch(apiUrl("content.php?page=training_locations"))
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setLocations(data);
+        }
+      })
+      .catch((err) => {
+        console.warn("Používám výchozí tréninková místa:", err);
+      });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,36 +81,54 @@ export const ContactPage: React.FC = () => {
                 Kde trénujeme
               </h2>
 
-              <div className="space-y-4 text-base md:text-[20px] font-light leading-[1.6] text-neutral-600">
-                <div className="grid grid-cols-[22px_1fr] gap-x-5">
-                  <span aria-hidden="true" className="pt-[1px] text-[27px] font-light leading-[1.35] text-neutral-500">
-                    ›
-                  </span>
-                  <div>
-                    <strong className="font-semibold text-neutral-800">Tělocvična ZŠ Čkalovova</strong>
-                    <p className="text-neutral-500 text-base">Čkalovova 942/2, 708 00 Ostrava – Poruba</p>
-                  </div>
-                </div>
+              <div className="space-y-5 text-base md:text-[20px] font-light leading-[1.6] text-neutral-600">
+                {locations.map((loc) => {
+                  const cleanAddress = formatShortAddress(loc.address);
+                  const mapsHref =
+                    loc.mapsUrl ||
+                    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      loc.name + " " + cleanAddress
+                    )}`;
 
-                <div className="grid grid-cols-[22px_1fr] gap-x-5">
-                  <span aria-hidden="true" className="pt-[1px] text-[27px] font-light leading-[1.35] text-neutral-500">
-                    ›
-                  </span>
-                  <div>
-                    <strong className="font-semibold text-neutral-800">Dům tance Ostrava</strong>
-                    <p className="text-neutral-500 text-base">Ostrava – Stará Bělá</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-[22px_1fr] gap-x-5">
-                  <span aria-hidden="true" className="pt-[1px] text-[27px] font-light leading-[1.35] text-neutral-500">
-                    ›
-                  </span>
-                  <div>
-                    <strong className="font-semibold text-neutral-800">Kulturní dům Hlučín</strong>
-                    <p className="text-neutral-500 text-base">Hlučín</p>
-                  </div>
-                </div>
+                  return (
+                    <div key={loc.id} className="grid grid-cols-[22px_1fr] gap-x-5 items-start">
+                      <span
+                        aria-hidden="true"
+                        className="pt-[1px] text-[27px] font-light leading-[1.35] text-neutral-500 select-none"
+                      >
+                        ›
+                      </span>
+                      <div>
+                        <strong className="font-semibold text-neutral-800 block">
+                          {loc.name}
+                        </strong>
+                        <a
+                          href={mapsHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group inline-flex items-center gap-1.5 text-neutral-600 hover:text-neutral-950 underline decoration-neutral-300 hover:decoration-neutral-900 underline-offset-2 transition-colors text-base"
+                          title={`Zobrazit na Google Mapách: ${loc.name}, ${cleanAddress}`}
+                        >
+                          <span>{cleanAddress}</span>
+                          <svg
+                            className="w-3.5 h-3.5 text-neutral-400 group-hover:text-neutral-900 transition-colors shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            />
+                          </svg>
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -164,17 +202,22 @@ export const ContactPage: React.FC = () => {
               <div className="space-y-px border-t border-b border-gray-300">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 py-3">
                   <div className="text-sm font-semibold text-gray-800">Název spolku</div>
-                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">Spolek LR Cosmetic dance team, z. s.</div>
+                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">LR COSMETIC DANCE TEAM z. s.</div>
                 </div>
                 <div className="border-t border-gray-200" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 py-3">
                   <div className="text-sm font-semibold text-gray-800">Sídlo</div>
-                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">Čkalovova 942/2, 708 00 Ostrava – Poruba</div>
+                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">náměstí Václava Vacka 6044/3, Poruba, 708 00 Ostrava</div>
                 </div>
                 <div className="border-t border-gray-200" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 py-3">
                   <div className="text-sm font-semibold text-gray-800">IČO</div>
-                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">65889758</div>
+                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">48430081</div>
+                </div>
+                <div className="border-t border-gray-200" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 py-3">
+                  <div className="text-sm font-semibold text-gray-800">Spisová značka</div>
+                  <div className="text-sm font-normal text-gray-700 text-left sm:text-right">L 2215 vedená u Krajského soudu v Ostravě</div>
                 </div>
                 <div className="border-t border-gray-200" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-4 py-3">

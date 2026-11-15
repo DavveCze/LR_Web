@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { HomeButton } from "../components/ui/HomeButton";
 import { LightButton, DarkButton } from "../components/ui/ButtonPrefab";
@@ -151,6 +151,10 @@ const COURSES_DATA: CourseDetail[] = [
 
 export const CoursesPage: React.FC = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [categorySlug]);
 
   const selectedCategory = categorySlug
     ? COURSES_DATA.find((c) => c.slugs.includes(categorySlug) || c.id === categorySlug)

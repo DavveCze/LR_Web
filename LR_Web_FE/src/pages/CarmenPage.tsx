@@ -6,7 +6,12 @@ import { RajceGallery } from "../components/gallery/RajceGallery";
 import { PageHeader } from "../components/layout/PageHeader";
 import { apiUrl } from "../api/client";
 
-type CarmenTab = "prehled" | "tabor" | "primestsky" | "vikend" | "fotogalerie";
+type CarmenTab = "tabory" | "prehled" | "tabor" | "primestsky" | "vikend" | "fotogalerie";
+
+interface CarmenTaboryData {
+  title: string;
+  paragraphs: string[];
+}
 
 interface CarmenContentData {
   overview: {
@@ -16,6 +21,7 @@ interface CarmenContentData {
     galleryUrl: string;
     slideshow: { src: string; alt?: string }[];
   };
+  tabory?: CarmenTaboryData;
   tabor: {
     title: string;
     paragraphs: string[];
@@ -65,6 +71,13 @@ const DEFAULT_CARMEN_CONTENT: CarmenContentData = {
       { src: "/assets/imgs/carmen/carmen_tanec1_1.webp", alt: "Dětský tanec Carmen" },
       { src: "/assets/imgs/carmen/carmen_tanec3_1.webp", alt: "Taneční lekce Carmen" },
       { src: "/assets/imgs/carmen/carmen_skupina_1.webp", alt: "Společné foto dětí Carmen" },
+    ],
+  },
+  tabory: {
+    title: "TÁBORY",
+    paragraphs: [
+      "Naše tábory jsou spojením tradičních a moderních táborů, které se svým osvědčeným týmem vedoucích s mnohaletou táborovou praxí tvoří nezapomenutelné prázdninové dny. Tábory pro děti pořádáme již od roku 2004. Nejen pro menší děti, ale i dospívající teenagery je připraven různorodý zábavný program. Těšit se můžete na nezapomenutelné chvíle strávené v krásné přírodě Beskyd, kde se Vaše děti budou moci zapojit do široké škály aktivit a her, pracují v týmech a nechybějí oblíbené diskotéky. Letní spací tábor pořádáme v RK Budoucnost, Nová Ves – Frýdlant nad Ostravicí, kde máme krásné zázemí s in-line dráhou, kterou využíváme k bruslení a skatu. Příměstské tábory pořádáme v Markvartovicích nedaleko Ostravy, kde již kousíček za městem jsme v úplně jiném světě.",
+      "Zárukou kvality našich táborů jsou spokojené děti, které se každoročně účastní našich letních táborů. Také rodinná atmosféra, která zaručí bezpečí a jistotu, pro děti, které s námi jedou poprvé. Zkrátka nezáleží na tom, kolik ti je let, jestli jsi holka nebo kluk. Na našem táboře si užiješ ty nejlepší prázdninové dny, poznáš nové kamarády a odvezeš si nezapomenutelné zážitky.",
     ],
   },
   tabor: {
@@ -135,6 +148,12 @@ export const CarmenPage: React.FC = () => {
   const location = useLocation();
   const path = location.pathname.toLowerCase();
 
+  const isTabory =
+    path === "/tabory" ||
+    path.startsWith("/tabory/") ||
+    subSection === "tabory" ||
+    path.endsWith("/tabory");
+
   const activeTab: CarmenTab =
     path.includes("fotogalerie") || subSection === "fotogalerie"
       ? "fotogalerie"
@@ -142,6 +161,8 @@ export const CarmenPage: React.FC = () => {
       ? "primestsky"
       : path.includes("vikend") || subSection === "vikend"
       ? "vikend"
+      : isTabory
+      ? "tabory"
       : path.includes("tabor") || subSection === "tabor"
       ? "tabor"
       : "prehled";
@@ -155,6 +176,7 @@ export const CarmenPage: React.FC = () => {
         if (isMounted && data && typeof data === "object" && Object.keys(data).length > 0) {
           setContent((prev) => ({
             overview: { ...prev.overview, ...(data.overview || {}) },
+            tabory: { ...prev.tabory, ...(data.tabory || {}) },
             tabor: { ...prev.tabor, ...(data.tabor || {}) },
             primestsky: { ...prev.primestsky, ...(data.primestsky || {}) },
             vikend: { ...prev.vikend, ...(data.vikend || {}) },
@@ -172,6 +194,8 @@ export const CarmenPage: React.FC = () => {
 
   const getCarmenTitle = () => {
     switch (activeTab) {
+      case "tabory":
+        return content.tabory?.title || "Tábory";
       case "tabor":
         return content.tabor.title || "Spací tábor";
       case "primestsky":
@@ -221,18 +245,18 @@ export const CarmenPage: React.FC = () => {
             </div>
 
             {/* TLAČÍTKA FACEBOOK A FOTOGALERIE */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto pt-4">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 max-w-2xl mx-auto w-full pt-4">
               <DarkButton
                 href={content.overview.facebookUrl}
-                isFlexible
-                className="uppercase tracking-wider font-bold"
+                isBig
+                className="uppercase tracking-wider font-bold justify-center text-center flex-1 sm:flex-initial"
               >
                 FACEBOOK
               </DarkButton>
               <DarkButton
                 href={content.overview.galleryUrl}
-                isFlexible
-                className="uppercase tracking-wider font-bold"
+                isBig
+                className="uppercase tracking-wider font-bold justify-center text-center flex-1 sm:flex-initial"
               >
                 FOTOGALERIE
               </DarkButton>
@@ -249,7 +273,37 @@ export const CarmenPage: React.FC = () => {
           </section>
         )}
 
-        {/* 2. ZÁLOŽKA: SPACÍ TÁBOR */}
+        {/* 2. ZÁLOŽKA: TÁBORY (PŘESNĚ DLE PŘEDLOHY: JEN DVA BUTTONY A TEXT) */}
+        {activeTab === "tabory" && (
+          <section className="max-w-4xl mx-auto pt-4 sm:pt-6 pb-12">
+            {/* DVA BUTTONY */}
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 max-w-2xl mx-auto w-full mb-12 sm:mb-16">
+              <DarkButton
+                href="/carmen/tabor"
+                isBig
+                className="justify-center text-center flex-1 sm:flex-initial"
+              >
+                Spací tábor
+              </DarkButton>
+              <DarkButton
+                href="/carmen/primestsky"
+                isBig
+                className="justify-center text-center flex-1 sm:flex-initial"
+              >
+                Příměstský tábor
+              </DarkButton>
+            </div>
+
+            {/* TEXTOVÝ OBSAH */}
+            <div className="space-y-6 text-base sm:text-[18px] text-neutral-700 font-light leading-[1.7]">
+              {content.tabory?.paragraphs.map((p, idx) => (
+                <p key={idx}>{p}</p>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 3. ZÁLOŽKA: SPACÍ TÁBOR */}
         {activeTab === "tabor" && (
           <section className="space-y-8">
             {/* HORNÍ TLAČÍTKO REGISTRACE */}
@@ -322,20 +376,18 @@ export const CarmenPage: React.FC = () => {
         {activeTab === "primestsky" && (
           <section className="space-y-8">
             {/* DVĚ TLAČÍTKA REGISTRACE (ČERVENEC & SRPEN) */}
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mx-auto w-full">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 max-w-2xl mx-auto w-full">
               <DarkButton
                 href={content.primestsky.julyUrl}
                 isBig
-                isCentered
-                className="uppercase tracking-wider font-bold"
+                className="uppercase tracking-wider font-bold justify-center text-center flex-1 sm:flex-initial"
               >
                 REGISTRACE (ČERVENEC)
               </DarkButton>
               <DarkButton
                 href={content.primestsky.augustUrl}
                 isBig
-                isCentered
-                className="uppercase tracking-wider font-bold"
+                className="uppercase tracking-wider font-bold justify-center text-center flex-1 sm:flex-initial"
               >
                 REGISTRACE (SRPEN)
               </DarkButton>
@@ -382,20 +434,18 @@ export const CarmenPage: React.FC = () => {
             </div>
 
             {/* DOLNÍ TLAČÍTKA REGISTRACE */}
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mx-auto w-full pt-4">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 max-w-2xl mx-auto w-full pt-4">
               <DarkButton
                 href={content.primestsky.julyUrl}
                 isBig
-                isCentered
-                className="uppercase tracking-wider font-bold"
+                className="uppercase tracking-wider font-bold justify-center text-center flex-1 sm:flex-initial"
               >
                 REGISTRACE (ČERVENEC)
               </DarkButton>
               <DarkButton
                 href={content.primestsky.augustUrl}
                 isBig
-                isCentered
-                className="uppercase tracking-wider font-bold"
+                className="uppercase tracking-wider font-bold justify-center text-center flex-1 sm:flex-initial"
               >
                 REGISTRACE (SRPEN)
               </DarkButton>

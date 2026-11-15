@@ -21,10 +21,10 @@ export const PrivacyPolicyPage: React.FC = () => {
               Správcem vašich osobních údajů je:
             </p>
             <div className="mt-3 p-4 bg-neutral-50 border border-neutral-200 text-sm space-y-1">
-              <p><strong>Název:</strong> LR Cosmetic dance team, z. s.</p>
-              <p><strong>IČO:</strong> 65889758</p>
-              <p><strong>Sídlo:</strong> Čkalovova 942/2, 708 00 Ostrava – Poruba, Česká republika</p>
-              <p><strong>Zápis v rejstříku:</strong> Krajský soud v Ostravě, oddíl L, vložka 3782</p>
+              <p><strong>Název:</strong> LR COSMETIC DANCE TEAM z. s.</p>
+              <p><strong>IČO:</strong> 48430081</p>
+              <p><strong>Sídlo:</strong> náměstí Václava Vacka 6044/3, Poruba, 708 00 Ostrava, Česká republika</p>
+              <p><strong>Zápis v rejstříku:</strong> Krajský soud v Ostravě, spisová značka L 2215</p>
               <p><strong>E-mail:</strong> <a href="mailto:l.cep82@gmail.com" className="underline">l.cep82@gmail.com</a></p>
               <p><strong>Telefon:</strong> <a href="tel:+420728145154" className="underline">+420 728 145 154</a></p>
             </div>

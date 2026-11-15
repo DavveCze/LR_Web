@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { apiUrl } from '../../api/client';
+import { DarkButton } from './ButtonPrefab';
 
 export interface RawCompetitionResult {
   id: number;
@@ -177,9 +177,7 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
   maxRecentCompetitions = 5,
 }) => {
   const [competitions, setCompetitions] = useState<CompetitionGroup[]>([]);
-  const [badgeText, setBadgeText] = useState<string>('🏆 Výsledky soutěží');
   const [headerRightText, setHeaderRightText] = useState<string>('');
-  const [isRecentFallback, setIsRecentFallback] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -266,18 +264,10 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
 
         if (weekendCompetitions.length > 0) {
           // REŽIM A: O tomto/uplynulém víkendu soutěže byly
-          setIsRecentFallback(false);
-          setBadgeText(
-            weekendRef.isCurrentWeekend
-              ? '🏆 Výsledky z tohoto víkendu'
-              : '🏆 Výsledky z uplynulého víkendu'
-          );
           setHeaderRightText(formatWeekendRange(weekendRef.satStr));
           setCompetitions(weekendCompetitions.slice(0, maxRecentCompetitions));
         } else {
           // REŽIM B: O tomto víkendu se nesoutěžilo -> zobrazíme poslední nedávné soutěže (max 5)
-          setIsRecentFallback(true);
-          setBadgeText('🏆 Poslední soutěže tanečních párů');
           setHeaderRightText('Nedávné soutěže');
           setCompetitions(candidateGroups.slice(0, maxRecentCompetitions));
         }
@@ -445,7 +435,7 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
 
   return (
     <div
-      className={`relative w-full ${className}`}
+      className={`relative w-full h-full flex flex-col justify-between ${className}`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocus={() => setIsPaused(true)}
@@ -456,7 +446,7 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
       onTouchEnd={() => setIsPaused(false)}
     >
       {/* HLAVNÍ BOX SLIDESHOW */}
-      <div className="relative flex flex-col justify-between overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 p-5 md:p-6 shadow-sm min-h-[320px] md:aspect-[8/5] md:min-h-[345px]">
+      <div className="relative flex flex-col justify-between h-full min-h-[360px] md:min-h-[375px]">
         {loading ? (
           <div className="flex h-full flex-col justify-between animate-pulse">
             <div className="flex justify-between items-center">
@@ -477,42 +467,34 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
             <p className="mt-1 text-xs text-neutral-500">
               Připravujeme čerstvé výsledky a umístění našich tanečních párů z nadcházejících soutěží.
             </p>
-            <Link
-              to="/klub/vysledky-soutezi"
-              className="mt-4 text-xs font-semibold text-neutral-900 underline hover:text-neutral-700"
-            >
-              Prohlédnout archiv výsledků ›
-            </Link>
+            <div className="pt-6 flex justify-center">
+              <DarkButton
+                href="/klub/vysledky-soutezi"
+                className="px-6 py-3 font-medium"
+              >
+                Výsledky soutěží
+              </DarkButton>
+            </div>
           </div>
         ) : (
           <>
-            {/* HORNÍ LIŠTA: ŠTÍTEK + DATUM / ROZSAH */}
+            {/* HORNÍ ČÁST: NÁZEV + DATUM + VÝSLEDKY + TEČKY */}
             <div>
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-wider text-neutral-500">
-                <span className="inline-flex items-center gap-1.5 rounded bg-neutral-200 px-2 py-0.5 text-[11px] font-bold text-neutral-800">
-                  {badgeText}
-                </span>
+              <div className="flex items-center justify-between text-xs uppercase tracking-wider text-neutral-500 mb-2">
                 {headerRightText && (
-                  <span className="font-semibold text-neutral-600">
+                  <span className="font-semibold text-neutral-500">
                     {headerRightText}
                   </span>
                 )}
               </div>
 
-              {/* Doplňující kontext, pokud se o víkendu nesoutěžilo */}
-              {isRecentFallback && (
-                <p className="mt-1 text-[11px] text-neutral-500 italic">
-                  O uplynulém víkendu se soutěže nekonaly • Výběr z posledních akcí klubu:
-                </p>
-              )}
-
               {/* NÁZEV SOUTĚŽE */}
-              <h4 className="mt-2.5 text-xl md:text-2xl font-bold text-neutral-900 tracking-tight line-clamp-1" title={currentComp.name}>
+              <h4 className="text-xl md:text-2xl font-bold text-neutral-900 tracking-tight line-clamp-1" title={currentComp.name}>
                 {currentComp.name}
               </h4>
 
               {/* PŘESNÉ DATUM A LOKACE TÉTO KONKRÉTNÍ SOUTĚŽE */}
-              <p className="mt-0.5 text-xs text-neutral-500">
+              <p className="mt-1 text-xs text-neutral-500">
                 <span>{formatCompetitionDate(currentComp.date)}</span>
                 {currentComp.location && (
                   <>
@@ -521,105 +503,98 @@ export const CompetitionResultsSlideshow: React.FC<CompetitionResultsSlideshowPr
                   </>
                 )}
               </p>
-            </div>
 
-            {/* SEZNAM VÝSLEDKŮ TANEČNÍCH PÁRŮ */}
-            <div
-              ref={scrollContainerRef}
-              className="my-2.5 space-y-2 overflow-y-auto max-h-[160px] pr-1"
-            >
-              {currentComp.results.map((res) => (
-                <div
-                  key={res.id}
-                  className="flex items-center justify-between gap-3 rounded border border-neutral-200/80 bg-white px-3 py-2 text-sm shadow-2xs"
-                >
-                  <span
-                    className="font-semibold text-neutral-800 truncate min-w-0"
-                    title={res.dancer2 ? `${res.dancer1} & ${res.dancer2}` : `${res.dancer1} (Sólo)`}
-                  >
-                    {res.dancer1}
-                    {res.dancer2 ? (
-                      <>
-                        {" "}
-                        <span className="text-neutral-400 font-normal">&amp;</span> {res.dancer2}
-                      </>
-                    ) : (
-                      <span className="ml-2 rounded bg-neutral-200 px-1.5 py-0.5 text-[10px] font-bold text-neutral-700">
-                        Sólo
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs shadow-2xs ${getBadgeStyle(
-                      res.placement
-                    )}`}
-                  >
-                    {res.placement}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* DOLNÍ ODKAZ & POČÍTADLO S ŠIPKAMI */}
-            <div className="pt-2 border-t border-neutral-200/80 flex items-center justify-between">
-              <Link
-                to="/klub/vysledky-soutezi"
-                className="inline-flex items-center text-xs font-semibold text-neutral-900 hover:underline"
+              {/* SEZNAM VÝSLEDKŮ TANEČNÍCH PÁRŮ - pevná výška h-[160px] garantuje nulový posun na ose Y */}
+              <div
+                ref={scrollContainerRef}
+                className="mt-3.5 h-[160px] space-y-2 overflow-y-auto pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
               >
-                Kompletní výsledky soutěží ›
-              </Link>
+                {currentComp.results.map((res) => (
+                  <div
+                    key={res.id}
+                    className="flex items-center justify-between gap-3 rounded border border-neutral-200/80 bg-white px-3 py-2 text-sm shadow-2xs"
+                  >
+                    <span
+                      className="font-semibold text-neutral-800 truncate min-w-0"
+                      title={res.dancer2 ? `${res.dancer1} & ${res.dancer2}` : `${res.dancer1} (Sólo)`}
+                    >
+                      {res.dancer1}
+                      {res.dancer2 ? (
+                        <>
+                          {" "}
+                          <span className="text-neutral-400 font-normal">&amp;</span> {res.dancer2}
+                        </>
+                      ) : (
+                        <span className="ml-2 rounded bg-neutral-200 px-1.5 py-0.5 text-[10px] font-bold text-neutral-700">
+                          Sólo
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs shadow-2xs ${getBadgeStyle(
+                        res.placement
+                      )}`}
+                    >
+                      {res.placement}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-              {/* ČÍSLOVÁNÍ SLIDŮ */}
+            {/* DOLNÍ ČÁST: POSOUVACÍ BAR (STÁLE NA STEJNÉM MÍSTĚ TĚSNĚ NAD TLAČÍTKEM) + TLAČÍTKO */}
+            <div className="pt-6 flex flex-col items-center">
+              {/* INDIKAČNÍ TEČKY POD VÝSLEDKY S ŠIPKAMI */}
               {total > 1 && (
-                <span className="text-[11px] font-mono text-neutral-400">
-                  Soutěž {activeIndex + 1} z {total}
-                </span>
+                <div className="mb-3.5 flex items-center justify-center gap-2.5">
+                  <button
+                    type="button"
+                    aria-label="Předchozí soutěž"
+                    onClick={goPrev}
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-neutral-600 border border-neutral-300 shadow-2xs hover:bg-neutral-100 hover:scale-105 transition cursor-pointer"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                  </button>
+
+                  <div className="flex gap-1.5">
+                    {competitions.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => goTo(i)}
+                        aria-label={`Přejít na soutěž ${i + 1}`}
+                        className={`h-2 rounded-full transition-all cursor-pointer ${
+                          i === activeIndex ? 'w-6 bg-neutral-800' : 'w-2 bg-neutral-300 hover:bg-neutral-400'
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    aria-label="Další soutěž"
+                    onClick={goNext}
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-neutral-600 border border-neutral-300 shadow-2xs hover:bg-neutral-100 hover:scale-105 transition cursor-pointer"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  </button>
+                </div>
               )}
+
+              <DarkButton
+                href="/klub/vysledky-soutezi"
+                className="px-6 py-3 font-medium"
+              >
+                Výsledky soutěží
+              </DarkButton>
             </div>
           </>
         )}
       </div>
-
-      {/* INDIKAČNÍ TEČKY POD SLIDESHOW S ŠIPKAMI */}
-      {total > 1 && (
-        <div className="mt-3 flex items-center justify-center gap-2.5">
-          <button
-            type="button"
-            aria-label="Předchozí soutěž"
-            onClick={goPrev}
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-neutral-600 border border-neutral-300 shadow-2xs hover:bg-neutral-100 hover:scale-105 transition cursor-pointer"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-
-          <div className="flex gap-1.5">
-            {competitions.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => goTo(i)}
-                aria-label={`Přejít na soutěž ${i + 1}`}
-                className={`h-2 rounded-full transition-all cursor-pointer ${
-                  i === activeIndex ? 'w-6 bg-neutral-800' : 'w-2 bg-neutral-300 hover:bg-neutral-400'
-                }`}
-              />
-            ))}
-          </div>
-
-          <button
-            type="button"
-            aria-label="Další soutěž"
-            onClick={goNext}
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-neutral-600 border border-neutral-300 shadow-2xs hover:bg-neutral-100 hover:scale-105 transition cursor-pointer"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        </div>
-      )}
     </div>
   );
 };

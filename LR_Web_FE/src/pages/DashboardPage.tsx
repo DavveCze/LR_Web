@@ -9,6 +9,7 @@ import { TrainingScheduleAdmin } from '../components/admin/TrainingScheduleAdmin
 import { DanceAdminPanel } from '../components/admin/DanceAdminPanel';
 import { CarmenAdminPanel } from '../components/admin/CarmenAdminPanel';
 import { NewsManager } from '../components/admin/NewsManager';
+import { TrainingLocationsAdmin } from '../components/admin/TrainingLocationsAdmin';
 import { PartnersSection } from '../components/ui/PartnersSection';
 
 export const DashboardPage: React.FC = () => {  
@@ -49,6 +50,10 @@ export const DashboardPage: React.FC = () => {
 
                 <div className="mb-8">
                     <NewsManager />
+                </div>
+
+                <div className="mb-8">
+                    <TrainingLocationsAdmin />
                 </div>
 
                 <div className="mb-8">

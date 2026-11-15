@@ -391,11 +391,11 @@ export function ClubResultsPage() {
       <main className="py-10 text-neutral-950 font-sans">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           {/* HORNÍ LIŠTA: PŘEPÍNAČ ROČNÍKŮ + TLAČÍTKO NAŠE PÁRY */}
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-            <div>
+          <div className="mb-8 flex items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
               {seasonGroups.length > 1 && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs uppercase tracking-wider font-semibold text-neutral-400 mr-1">
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full whitespace-nowrap scrollbar-none">
+                  <span className="text-xs uppercase tracking-wider font-semibold text-neutral-400 mr-1 shrink-0">
                     Ročník:
                   </span>
                   {seasonGroups.map((sg) => (
@@ -403,7 +403,7 @@ export function ClubResultsPage() {
                       key={sg.season}
                       type="button"
                       onClick={() => setSelectedSeason(sg.season)}
-                      className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors cursor-pointer ${
+                      className={`shrink-0 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors cursor-pointer ${
                         activeSeason === sg.season
                           ? "bg-neutral-900 text-white"
                           : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
@@ -416,13 +416,15 @@ export function ClubResultsPage() {
               )}
             </div>
 
-            <DarkButton
-              onClick={() => {
-                navigate("/klub/pary");
-              }}
-            >
-              Naše páry
-            </DarkButton>
+            <div className="hidden sm:block shrink-0">
+              <DarkButton
+                onClick={() => {
+                  navigate("/klub/pary");
+                }}
+              >
+                Naše páry
+              </DarkButton>
+            </div>
           </div>
 
           {loading ? (

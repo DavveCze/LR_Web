@@ -50,6 +50,12 @@ interface CarmenAlbum {
 
 interface CarmenContent {
   overview: CarmenOverview;
+  tabory?: {
+    title: string;
+    subtitle?: string;
+    banner?: string;
+    paragraphs: string[];
+  };
   tabor: CarmenTabor;
   primestsky: CarmenPrimestsky;
   vikend: CarmenVikend;
@@ -63,7 +69,7 @@ export const CarmenAdminPanel: React.FC = () => {
   const [data, setData] = useState<CarmenContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "tabor" | "primestsky" | "vikend" | "fotogalerie">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "tabory" | "tabor" | "primestsky" | "vikend" | "fotogalerie">("overview");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -161,6 +167,17 @@ export const CarmenAdminPanel: React.FC = () => {
           }`}
         >
           O Carmen & Slideshow
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("tabory")}
+          className={`px-5 py-3 border-b-2 transition ${
+            activeTab === "tabory"
+              ? "border-neutral-900 text-neutral-900 bg-white font-bold"
+              : "border-transparent text-neutral-600 hover:text-neutral-900"
+          }`}
+        >
+          Tábory (Rozcestník)
         </button>
         <button
           type="button"
@@ -357,7 +374,103 @@ export const CarmenAdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* 2. SPACÍ TÁBOR */}
+        {/* 2. HLAVNÍ STRÁNKA TÁBORY (ROZCESTNÍK) */}
+        {activeTab === "tabory" && (
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-neutral-800 mb-1">Titulek stránky</label>
+              <input
+                type="text"
+                className="w-full border border-neutral-300 p-2.5 rounded text-sm"
+                value={data.tabory?.title || "TÁBORY"}
+                onChange={(e) =>
+                  setData({
+                    ...data,
+                    tabory: {
+                      ...(data.tabory || {
+                        title: "TÁBORY",
+                        paragraphs: [],
+                      }),
+                      title: e.target.value,
+                    },
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-neutral-800 mb-1">Textové odstavce</label>
+              <div className="space-y-3">
+                {(data.tabory?.paragraphs || [
+                  "Naše tábory jsou spojením tradičních a moderních táborů, které se svým osvědčeným týmem vedoucích s mnohaletou táborovou praxí tvoří nezapomenutelné prázdninové dny. Tábory pro děti pořádáme již od roku 2004. Nejen pro menší děti, ale i dospívající teenagery je připraven různorodý zábavný program. Těšit se můžete na nezapomenutelné chvíle strávené v krásné přírodě Beskyd, kde se Vaše děti budou moci zapojit do široké škály aktivit a her, pracují v týmech a nechybějí oblíbené diskotéky. Letní spací tábor pořádáme v RK Budoucnost, Nová Ves – Frýdlant nad Ostravicí, kde máme krásné zázemí s in-line dráhou, kterou využíváme k bruslení a skatu. Příměstské tábory pořádáme v Markvartovicích nedaleko Ostravy, kde již kousíček za městem jsme v úplně jiném světě.",
+                  "Zárukou kvality našich táborů jsou spokojené děti, které se každoročně účastní našich letních táborů. Také rodinná atmosféra, která zaručí bezpečí a jistotu, pro děti, které s námi jedou poprvé. Zkrátka nezáleží na tom, kolik ti je let, jestli jsi holka nebo kluk. Na našem táboře si užiješ ty nejlepší prázdninové dny, poznáš nové kamarády a odvezeš si nezapomenutelné zážitky."
+                ]).map((p, idx) => (
+                  <div key={idx} className="flex gap-2 items-start">
+                    <textarea
+                      rows={4}
+                      className="w-full border border-neutral-300 p-2 rounded text-sm"
+                      value={p}
+                      onChange={(e) => {
+                        const next = [...(data.tabory?.paragraphs || [])];
+                        next[idx] = e.target.value;
+                        setData({
+                          ...data,
+                          tabory: {
+                            ...(data.tabory || {
+                              title: "TÁBORY",
+                              paragraphs: [],
+                            }),
+                            paragraphs: next,
+                          },
+                        });
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = (data.tabory?.paragraphs || []).filter((_, i) => i !== idx);
+                        setData({
+                          ...data,
+                          tabory: {
+                            ...(data.tabory || {
+                              title: "TÁBORY",
+                              paragraphs: [],
+                            }),
+                            paragraphs: next,
+                          },
+                        });
+                      }}
+                      className="text-red-500 hover:text-red-700 px-2 py-1 text-xs font-bold"
+                    >
+                      Smazat
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = [...(data.tabory?.paragraphs || []), "Nový odstavec"];
+                    setData({
+                      ...data,
+                      tabory: {
+                        ...(data.tabory || {
+                          title: "TÁBORY",
+                          paragraphs: [],
+                        }),
+                        paragraphs: next,
+                      },
+                    });
+                  }}
+                  className="text-xs font-semibold border border-neutral-400 bg-white px-3 py-1.5 rounded hover:bg-neutral-100"
+                >
+                  + Přidat odstavec
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 3. SPACÍ TÁBOR */}
         {activeTab === "tabor" && (
           <div className="space-y-5">
             <div>

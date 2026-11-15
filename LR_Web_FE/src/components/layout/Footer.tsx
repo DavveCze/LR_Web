@@ -16,9 +16,9 @@ export const Footer: FC = () => {
               a vedeme taneční kurzy pro mateřské i základní školy, středoškoláky a dospělé.
             </p>
             <div className="pt-2 text-xs text-neutral-400 space-y-1">
-              <p><strong>Spolek:</strong> LR Cosmetic dance team, z. s.</p>
-              <p><strong>IČO:</strong> 65889758 | <strong>Sídlo:</strong> Čkalovova 942/2, 708 00 Ostrava – Poruba</p>
-              <p className="text-neutral-500">Zapsáno ve spolkovém rejstříku vedeném Krajským soudem v Ostravě, oddíl L, vložka 3782.</p>
+              <p><strong>Spolek:</strong> LR COSMETIC DANCE TEAM z. s.</p>
+              <p><strong>IČO:</strong> 48430081 | <strong>Sídlo:</strong> náměstí Václava Vacka 6044/3, Poruba, 708 00 Ostrava</p>
+              <p className="text-neutral-500">Zapsáno ve spolkovém rejstříku vedeném Krajským soudem v Ostravě, spisová značka L 2215.</p>
             </div>
           </div>
 
