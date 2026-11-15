@@ -7,7 +7,7 @@ export const CarmenAdminPanel: React.FC = () => {
   const [data, setData] = useState<CarmenContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "tabory" | "tabor" | "primestsky" | "vikend" | "fotogalerie">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "tabory" | "tabor" | "primestsky" | "vikend">("overview");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -150,17 +150,6 @@ export const CarmenAdminPanel: React.FC = () => {
           }`}
         >
           Taneční víkend
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("fotogalerie")}
-          className={`px-5 py-3 border-b-2 transition ${
-            activeTab === "fotogalerie"
-              ? "border-neutral-900 text-neutral-900 bg-white font-bold"
-              : "border-transparent text-neutral-600 hover:text-neutral-900"
-          }`}
-        >
-          Fotogalerie
         </button>
       </div>
 
@@ -643,114 +632,7 @@ export const CarmenAdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* 5. FOTOGALERIE */}
-        {activeTab === "fotogalerie" && (
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-neutral-800 mb-1">Titulek stránky</label>
-              <input
-                type="text"
-                className="w-full border border-neutral-300 p-2.5 rounded text-sm"
-                value={data.fotogalerie.title}
-                onChange={(e) =>
-                  setData({
-                    ...data,
-                    fotogalerie: { ...data.fotogalerie, title: e.target.value },
-                  })
-                }
-              />
-            </div>
-
-            <div className="space-y-4">
-              <label className="block text-sm font-semibold text-neutral-800">Alba fotogalerie Carmen</label>
-              {data.fotogalerie.albums.map((album, idx) => (
-                <div key={album.id || idx} className="p-4 border border-neutral-200 rounded bg-neutral-50 flex flex-wrap gap-4 items-start">
-                  <div className="flex-1 min-w-[240px] space-y-2">
-                    <input
-                      type="text"
-                      className="w-full border border-neutral-300 p-1.5 rounded text-xs"
-                      placeholder="Název alba"
-                      value={album.title}
-                      onChange={(e) => {
-                        const newAlbums = [...data.fotogalerie.albums];
-                        newAlbums[idx].title = e.target.value;
-                        setData({
-                          ...data,
-                          fotogalerie: { ...data.fotogalerie, albums: newAlbums },
-                        });
-                      }}
-                    />
-                    <input
-                      type="url"
-                      className="w-full border border-neutral-300 p-1.5 rounded text-xs"
-                      placeholder="Odkaz na album (Rajče apod.)"
-                      value={album.url}
-                      onChange={(e) => {
-                        const newAlbums = [...data.fotogalerie.albums];
-                        newAlbums[idx].url = e.target.value;
-                        setData({
-                          ...data,
-                          fotogalerie: { ...data.fotogalerie, albums: newAlbums },
-                        });
-                      }}
-                    />
-                    <ImagePickerInput
-                      label="Obalové foto alba"
-                      value={album.image}
-                      defaultFolder="carmen"
-                      onChange={(val) => {
-                        const newAlbums = [...data.fotogalerie.albums];
-                        newAlbums[idx].image = val;
-                        setData({
-                          ...data,
-                          fotogalerie: { ...data.fotogalerie, albums: newAlbums },
-                        });
-                      }}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newAlbums = data.fotogalerie.albums.filter((_, i) => i !== idx);
-                      setData({
-                        ...data,
-                        fotogalerie: { ...data.fotogalerie, albums: newAlbums },
-                      });
-                    }}
-                    className="text-red-600 hover:text-red-800 text-xs font-semibold px-2 py-1"
-                  >
-                    Smazat album
-                  </button>
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={() => {
-                  setData({
-                    ...data,
-                    fotogalerie: {
-                      ...data.fotogalerie,
-                      albums: [
-                        ...data.fotogalerie.albums,
-                        {
-                          id: `album-${Date.now()}`,
-                          title: "Nové album",
-                          image: "/assets/imgs/downloaded/carmen_akademie_2023_1.webp",
-                          url: "https://www.rajce.idnes.cz/lr-dance/",
-                        },
-                      ],
-                    },
-                  });
-                }}
-                className="text-xs font-semibold border border-neutral-400 bg-white px-3 py-1.5 rounded hover:bg-neutral-100"
-              >
-                + Přidat album
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
     </div>
   );
 };
